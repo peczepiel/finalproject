@@ -1,74 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>College Basketball Explorer</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-        body { 
-            margin: 0; 
-            font-family: Arial, sans-serif; 
-            display: flex; 
-            flex-direction: column; 
-            height: 100vh; 
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
             overflow: hidden;
         }
-        
+
         /* Top Half: Filter Spaces */
-        #top-half { 
-            display: flex; 
-            height: 50%; 
-            border-bottom: 2px solid #333; 
-            background-color: #f8f9fa; 
+        #top-half {
+            display: flex;
+            height: 50%;
+            border-bottom: 2px solid #333;
+            background-color: #f8f9fa;
         }
-        .filter-container { 
-            flex: 1; /* Divides the top evenly into 5 columns */
-            border-right: 1px solid #ddd; 
-            padding: 15px; 
-            box-sizing: border-box; 
+
+        .filter-container {
+            flex: 1;
+            /* Divides the top evenly into 5 columns */
+            border-right: 1px solid #ddd;
+            padding: 15px;
+            box-sizing: border-box;
             display: flex;
             flex-direction: column;
         }
-        .filter-container:last-child { border-right: none; }
-        .filter-container h3 { margin-top: 0; font-size: 16px; text-align: center; }
-        
-        /* Bottom Half: Portrait Display */
-        #bottom-half { 
-            height: 50%; 
-            padding: 20px; 
-            background-color: #ebebeb;
-            overflow-y: auto; 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 15px; 
-            align-content: flex-start; 
+
+        .filter-container:last-child {
+            border-right: none;
         }
-        
+
+        .filter-container h3 {
+            margin-top: 0;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        /* Bottom Half: Portrait Display */
+        #bottom-half {
+            height: 50%;
+            padding: 20px;
+            background-color: #ebebeb;
+            overflow-y: auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-content: flex-start;
+        }
+
         /* Individual Team Portrait/Card */
-        .portrait { 
-            width: 120px; 
-            height: 140px; 
-            background: white; 
-            border: 1px solid #ccc; 
-            border-radius: 8px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            text-align: center; 
-            padding: 10px; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+        .portrait {
+            width: 120px;
+            height: 140px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             transition: transform 0.2s;
         }
-        .portrait:hover { transform: scale(1.05); }
-        .portrait .team-name { font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #2c3e50; }
-        .portrait .stat { font-size: 12px; color: #555; }
-        
+
+        .portrait:hover {
+            transform: scale(1.05);
+        }
+
+        .portrait .team-name {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .portrait .stat {
+            font-size: 12px;
+            color: #555;
+        }
+
         /* Tooltip & SVG formatting */
-        #win-graph-container { flex-grow: 1; width: 100%; height: 100%; }
+        #win-graph-container {
+            flex-grow: 1;
+            width: 100%;
+            height: 100%;
+        }
+
+        #basketball-court {
+            flex-grow: 1;
+            width: 90%;
+            height: 90%;
+            aspect-ratio: 500 / 940;
+        }
     </style>
 </head>
+
 <body>
 
     <div id="top-half">
@@ -83,7 +119,8 @@
             <h3>Filter 3 (To Be Built)</h3>
         </div>
         <div id="filter4" class="filter-container">
-            <h3>Filter 4 (To Be Built)</h3>
+            <h3>Basketball Court</h3>
+            <div id="basketball-court"></div>
         </div>
         <div id="filter5" class="filter-container">
             <h3>Filter 5 (To Be Built)</h3>
@@ -91,10 +128,14 @@
     </div>
 
     <div id="bottom-half">
-        </div>
+    </div>
 
     <script src="app.js"></script>
     <script src="winPercentFilter.js"></script>
+<<<<<<< HEAD
     <script src="year.js"></script>
+=======
+    <script src="court.js"></script>
+>>>>>>> c1057e3f59f173a9a029f396b841a4c6680530a7
 </body>
 </html>
