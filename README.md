@@ -25,6 +25,7 @@ Categories from the chart that we are going to use currently:
 - SEED
 - YEAR
 
+Data retrived from: https://barttorvik.com/#
 
 
 *BELOW THIS LINE IS FROM THE INITIAL README*
