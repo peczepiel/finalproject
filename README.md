@@ -10,8 +10,6 @@ Things to include in final draft from our initial drawings:
 
 
 
-
-
 *BELOW THIS LINE IS FROM THE INITIAL README*
 
 Final Project - Interactive Data Visualization  
