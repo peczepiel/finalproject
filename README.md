@@ -1,3 +1,19 @@
+Things to include in final draft from our initial drawings:
+
+- Bracket Selector
+- Court with Defense/Offense Stats
+- Win % graph
+- Seed Selector
+- Year Selector
+
+- Bubble chart on the bottom for portraits
+
+
+
+
+
+*BELOW THIS LINE IS FROM THE INITIAL README*
+
 Final Project - Interactive Data Visualization  
 ===
 
