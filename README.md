@@ -8,7 +8,22 @@ Things to include in final draft from our initial drawings:
 
 - Bubble chart on the bottom for portraits
 
+Categories from the chart that we are going to use currently:
 
+- TEAM
+- CONF
+- W%
+- ORB (Offensive Rebounds)
+- DRB (Defensive Rebounds)
+- FTR (Free Throw Percentage Made)
+- FTRD (Free Throw Percentage Made by Opponent)
+- 2P_O (Offensive 2 point shots made)
+- 2P_D (2 point shots made by opponent)
+- 3P_O (Offensive 3 point shots made)
+- 3P_D (3 point shots made by opponent)
+- Finish Dum (How many games each team played; used instead of POSTSEASON category)
+- SEED
+- YEAR
 
 
 
