@@ -1,70 +1,81 @@
+// winPercentFilter.js
 function initWinPercentFilter(data, updateCallback) {
     const container = d3.select("#win-graph-container");
-    
-    // Get dynamic width/height from the container
-    const width = container.node().getBoundingClientRect().width;
-    const height = container.node().getBoundingClientRect().height;
-    const margin = {top: 10, right: 10, bottom: 20, left: 30};
+    container.html("");
 
-    // Create the SVG canvas
+    const width = container.node().getBoundingClientRect().width || 300;
+    const height = container.node().getBoundingClientRect().height || 150;
+    const margin = {top: 10, right: 15, bottom: 25, left: 15};
+
     const svg = container.append("svg")
         .attr("width", width)
         .attr("height", height);
 
-    // X Axis setup (Win % from 0 to 100)
+    // --- NEW: Dynamically find the minimum Win % in the data ---
+    const minWinPct = Math.floor(d3.min(data, d => d.winPctRaw));
+
     const x = d3.scaleLinear()
-        .domain([0, 100])
+        .domain([minWinPct, 100]) // Use the dynamic minimum
         .range([margin.left, width - margin.right]);
 
-    // Setup the histogram bins (grouping teams by similar win %)
     const histogram = d3.histogram()
         .value(d => d.winPctRaw)
         .domain(x.domain())
-        .thresholds(x.ticks(10)); // Splits data into ~10 bars
+        .thresholds(x.ticks(15));
 
     const bins = histogram(data);
 
-    // Y Axis setup (Count of teams in that bin)
+    // Ensure the curve drops nicely to 0 at the ends
+    bins.unshift({x0: minWinPct, x1: bins[0].x0, length: 0});
+    bins.push({x0: bins[bins.length-1].x1, x1: 100, length: 0});
+
     const y = d3.scaleLinear()
         .domain([0, d3.max(bins, d => d.length)])
         .range([height - margin.bottom, margin.top]);
 
-    // Draw the X axis
+    const area = d3.area()
+        .curve(d3.curveBasis)
+        .x(d => x(d.x0 + (d.x1 - d.x0) / 2))
+        .y0(height - margin.bottom)
+        .y1(d => y(d.length));
+
+    svg.append("path")
+        .datum(bins)
+        .attr("fill", "#eaf2f8")
+        .attr("d", area);
+
+    const line = d3.line()
+        .curve(d3.curveBasis)
+        .x(d => x(d.x0 + (d.x1 - d.x0) / 2))
+        .y(d => y(d.length));
+
+    svg.append("path")
+        .datum(bins)
+        .attr("fill", "none")
+        .attr("stroke", "#3498db")
+        .attr("stroke-width", 2)
+        .attr("d", line);
+
     svg.append("g")
         .attr("transform", `translate(0,${height - margin.bottom})`)
         .call(d3.axisBottom(x).ticks(5).tickFormat(d => d + "%"));
 
-    // Draw the Y axis
-    svg.append("g")
-        .attr("transform", `translate(${margin.left},0)`)
-        .call(d3.axisLeft(y).ticks(4));
+    const brush = d3.brushX()
+        .extent([[margin.left, margin.top], [width - margin.right, height - margin.bottom]])
+        .on("brush end", brushed);
 
-    // Draw the bars
-    svg.selectAll("rect")
-        .data(bins)
-        .enter().append("rect")
-        .attr("x", 1)
-        .attr("transform", d => `translate(${x(d.x0)},${y(d.length)})`)
-        .attr("width", d => Math.max(0, x(d.x1) - x(d.x0) - 1))
-        .attr("height", d => height - margin.bottom - y(d.length))
-        .style("fill", "#3498db") // Default blue color
-        
-        // --- HOVER INTERACTIVITY ---
-        .on("mouseover", function(event, d) {
-            // Highlight the bar orange
-            d3.select(this).style("fill", "#e67e22");
-            
-            // Filter the global dataset to only teams in this bin
-            const filteredData = data.filter(item => item.winPctRaw >= d.x0 && item.winPctRaw < d.x1);
-            
-            // Call the render function to update bottom half
-            updateCallback(filteredData);
-        })
-        .on("mouseout", function(event, d) {
-            // Return to default blue
-            d3.select(this).style("fill", "#3498db");
-            
-            // Reset bottom half to show all data
-            updateCallback(data);
-        });
+    svg.append("g")
+        .attr("class", "brush")
+        .call(brush);
+
+    function brushed(event) {
+        if (!event.selection) {
+            updateCallback(null);
+            return;
+        }
+        const [pixelMin, pixelMax] = event.selection;
+        const minVal = x.invert(pixelMin);
+        const maxVal = x.invert(pixelMax);
+        updateCallback([minVal, maxVal]);
+    }
 }
