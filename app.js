@@ -27,6 +27,11 @@ d3.csv("cleaneddataset.csv").then(data => {
         initWinPercentFilter(globalData, renderPortraits);
     }
 
+    // Initialize the Court Filter (from court.js)
+    if (typeof initCourtFilter === "function") {
+        initCourtFilter(globalData, renderPortraits);
+    }
+
 }).catch(error => {
     console.error("Error loading the CSV file:", error);
     document.getElementById("bottom-half").innerHTML = "<p style='color:red;'>Could not load cleaneddataset.csv. Are you running this via a local server?</p>";
