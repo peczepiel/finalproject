@@ -4,7 +4,7 @@ let globalData = [];
 const activeFilters = {
     year: null,
     winPct: null,
-    court: null,
+    court: {},
     seed: null // NEW
 };
 
@@ -23,8 +23,15 @@ function initAllFilters() {
         });
     }
     if (typeof initCourtFilter === "function") {
-        initCourtFilter(globalData, (range) => {
-            activeFilters.court = range;
+        initCourtFilter(globalData, (payload) => {
+            // Support both legacy [min,max] and metric-aware payloads from court.js.
+            if (payload === null) {
+                activeFilters.court = {};
+            } else if (Array.isArray(payload)) {
+                activeFilters.court["2P_O"] = payload;
+            } else if (payload.metric && Array.isArray(payload.range)) {
+                activeFilters.court[payload.metric] = payload.range;
+            }
             applyAllFilters();
         });
     }
@@ -69,12 +76,15 @@ function applyAllFilters() {
         const max = activeFilters.winPct[1];
         filtered = filtered.filter(d => d.winPctRaw >= min && d.winPctRaw <= max);
     }
-    if (activeFilters.court !== null) {
-        const min = activeFilters.court[0];
-        const max = activeFilters.court[1];
+    if (activeFilters.court && Object.keys(activeFilters.court).length > 0) {
         filtered = filtered.filter(d => {
-            const twoPO = +d["2P_O"];
-            return twoPO >= min && twoPO <= max;
+            return Object.entries(activeFilters.court).every(([metric, range]) => {
+                if (!Array.isArray(range) || range.length !== 2) return true;
+                const min = Math.min(range[0], range[1]);
+                const max = Math.max(range[0], range[1]);
+                const value = +d[metric];
+                return !isNaN(value) && value >= min && value <= max;
+            });
         });
     }
 
@@ -115,7 +125,7 @@ document.getElementById("clear-btn").addEventListener("click", () => {
     // 1. Reset the logic state
     activeFilters.year = null;
     activeFilters.winPct = null;
-    activeFilters.court = null;
+    activeFilters.court = {};
     activeFilters.seed = null;
 
     // 2. Clear the screen by re-initializing the components to their defaults
