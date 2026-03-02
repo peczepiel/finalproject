@@ -1,14 +1,12 @@
-// app.js
 let globalData = [];
 
 const activeFilters = {
     year: null,
     winPct: null,
     court: {},
-    seed: null // NEW
+    seed: null 
 };
 
-// Wrapper function so we can easily re-initialize the UI when clearing
 function initAllFilters() {
     if (typeof initWinPercentFilter === "function") {
         initWinPercentFilter(globalData, (range) => {
@@ -24,7 +22,6 @@ function initAllFilters() {
     }
     if (typeof initCourtFilter === "function") {
         initCourtFilter(globalData, (payload) => {
-            // Support both legacy [min,max] and metric-aware payloads from court.js.
             if (payload === null) {
                 activeFilters.court = {};
             } else if (Array.isArray(payload)) {
@@ -35,7 +32,6 @@ function initAllFilters() {
             applyAllFilters();
         });
     }
-    // NEW: Initialize Seed Filter
     if (typeof initSeedFilter === "function") {
         initSeedFilter(globalData, (range) => {
             activeFilters.seed = range;
@@ -56,8 +52,6 @@ d3.csv("cleaneddataset.csv").then(data => {
 
     globalData = tournamentTeams;
     renderBubbles(globalData);
-
-    // Call the wrapper
     initAllFilters();
 
 }).catch(error => {
@@ -91,7 +85,6 @@ function applyAllFilters() {
     if (activeFilters.seed !== null && activeFilters.seed.length > 0) {
         filtered = filtered.filter(d => {
             const seedNum = parseInt(d.SEED);
-            // Keep the team only if their seed is inside the array of clicked seeds
             return activeFilters.seed.includes(seedNum);
         });
     }
@@ -120,17 +113,13 @@ function renderBubbles(filteredData) {
     portraits.append("div").attr("class", "stat").text(d => `Conf: ${d.CONF}`);
 }
 
-// NEW: Clear Button Event Listener
+
 document.getElementById("clear-btn").addEventListener("click", () => {
-    // 1. Reset the logic state
     activeFilters.year = null;
     activeFilters.winPct = null;
     activeFilters.court = {};
     activeFilters.seed = null;
 
-    // 2. Clear the screen by re-initializing the components to their defaults
     initAllFilters();
-
-    // 3. Render all portraits again
     renderBubbles(globalData);
 });

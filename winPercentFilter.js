@@ -1,4 +1,3 @@
-// winPercentFilter.js
 function initWinPercentFilter(data, updateCallback) {
     const container = d3.select("#win-graph-container");
     container.html("");
@@ -11,11 +10,10 @@ function initWinPercentFilter(data, updateCallback) {
         .attr("width", width)
         .attr("height", height);
 
-    // --- NEW: Dynamically find the minimum Win % in the data ---
     const minWinPct = Math.floor(d3.min(data, d => d.winPctRaw));
 
     const x = d3.scaleLinear()
-        .domain([minWinPct, 100]) // Use the dynamic minimum
+        .domain([minWinPct, 100]) //use min win%
         .range([margin.left, width - margin.right]);
 
     const histogram = d3.histogram()
@@ -25,7 +23,6 @@ function initWinPercentFilter(data, updateCallback) {
 
     const bins = histogram(data);
 
-    // Ensure the curve drops nicely to 0 at the ends
     bins.unshift({x0: minWinPct, x1: bins[0].x0, length: 0});
     bins.push({x0: bins[bins.length-1].x1, x1: 100, length: 0});
 

@@ -1,9 +1,6 @@
-// bubbles.js
-
 function renderBubbles(filteredData) {
     const container = d3.select("#bottom-half");
     
-    // Clear the container
     container.html("");
 
     if (filteredData.length === 0) {
@@ -13,7 +10,6 @@ function renderBubbles(filteredData) {
         return;
     }
 
-    // Get the dynamic dimensions of the bottom half
     const width = container.node().getBoundingClientRect().width;
     const height = container.node().getBoundingClientRect().height;
 
@@ -21,7 +17,6 @@ function renderBubbles(filteredData) {
         .attr("width", width)
         .attr("height", height);
 
-    // Create or select the tooltip div
     let tooltip = d3.select("body").select(".bubble-tooltip");
     if (tooltip.empty()) {
         tooltip = d3.select("body").append("div")
@@ -38,17 +33,14 @@ function renderBubbles(filteredData) {
             .style("box-shadow", "0 4px 6px rgba(0,0,0,0.1)");
     }
 
-    // --- NEW: STRICT MARGIN CALCULATIONS ---
-    const margin = 20; // 20px hard margin on all sides
+    const margin = 20; //change if needed
     const safeWidth = width - (margin * 2);
     const safeHeight = height - (margin * 2);
     const safeArea = safeWidth * safeHeight;
     
-    // Calculate how much space each node gets inside the safe area
     const maxAreaPerNode = safeArea / filteredData.length;
     
-    // Multiplier adjusted to 0.75 to account for the empty space between packed circles.
-    // Also added a safety check so a bubble can never be taller than the safe height.
+    //this is physics of bubbles, might need to edit
     const maxPossibleRadius = Math.min(100, safeHeight / 2, safeWidth / 2);
     const baseRadius = Math.max(15, Math.min(maxPossibleRadius, Math.sqrt(maxAreaPerNode / Math.PI) * 0.75));
 
@@ -119,10 +111,8 @@ function renderBubbles(filteredData) {
             return d.TEAM.substring(0, 3).toUpperCase();
         });
 
-    // --- NEW: STRICT CLAMPING IN THE PHYSICS TICK ---
     simulation.on("tick", () => {
         nodeG.attr("transform", d => {
-            // The bubbles cannot physically go past the exact 20px margin on any side
             d.x = Math.max(margin + d.radius, Math.min(width - margin - d.radius, d.x));
             d.y = Math.max(margin + d.radius, Math.min(height - margin - d.radius, d.y));
             return `translate(${d.x},${d.y})`;

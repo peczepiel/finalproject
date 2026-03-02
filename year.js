@@ -1,4 +1,3 @@
-// year.js
 function initYearFilter(data, updateCallback) {
     const container = d3.select("#year-selector");
     container.html(""); 
@@ -11,7 +10,6 @@ function initYearFilter(data, updateCallback) {
         .attr("width", width)
         .attr("height", height);
 
-    // --- NEW: Generate a continuous list of years from min to max ---
     const minYear = d3.min(data, d => parseInt(d.YEAR));
     const maxYear = d3.max(data, d => parseInt(d.YEAR));
     const years = d3.range(minYear, maxYear + 1);
@@ -38,9 +36,9 @@ function initYearFilter(data, updateCallback) {
         .append("g")
         .attr("class", "year-node")
         .attr("transform", d => `translate(${x(d)}, ${height / 2})`)
-        .style("cursor", d => d === 2020 ? "not-allowed" : "pointer") // Block click icon for 2020
+        .style("cursor", d => d === 2020 ? "not-allowed" : "pointer")
         .on("click", function(event, d) {
-            if (d === 2020) return; // Ignore clicks entirely on 2020
+            if (d === 2020) return;
             
             if (selectedYear === d) {
                 selectedYear = null; 
@@ -52,17 +50,15 @@ function initYearFilter(data, updateCallback) {
             updateStyles();
         });
 
-    // Draw the circles, styling 2020 distinctly
     yearNodes.append("circle")
         .attr("r", 0) 
         .attr("fill", d => d === 2020 ? "#f3f4f6" : "#fff")
         .attr("stroke", d => d === 2020 ? "#9ca3af" : "#3498db")
         .attr("stroke-width", d => d === 2020 ? 2 : 3)
-        .attr("stroke-dasharray", d => d === 2020 ? "2,2" : "none") // Dashed line for missing data
+        .attr("stroke-dasharray", d => d === 2020 ? "2,2" : "none")
         .transition().duration(400) 
         .attr("r", d => d === 2020 ? 6 : 8);
 
-    // The text for the year
     yearNodes.append("text")
         .attr("y", 28)
         .attr("text-anchor", "middle")
@@ -71,7 +67,7 @@ function initYearFilter(data, updateCallback) {
         .style("fill", d => d === 2020 ? "#9ca3af" : "#6b7280")
         .text(d => d);
 
-    // Label exclusively for 2020
+    //covid label on 2020
     yearNodes.filter(d => d === 2020).append("text")
         .attr("y", -18)
         .attr("text-anchor", "middle")

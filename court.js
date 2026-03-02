@@ -1,4 +1,3 @@
-// court.js
 function initCourtFilter(data, updateCallback) {
     const courtWidth = 50;
     const courtLength = 94;
@@ -9,16 +8,14 @@ function initCourtFilter(data, updateCallback) {
     const heightScale = d3.scaleLinear().domain([0, courtLength]).range([0, pixelHeight]);
 
     const container = d3.select("#basketball-court");
-    container.html(""); // clear existing
+    container.html("");
 
-    // --- NEW: Swap width/height in viewBox to make the bounding box horizontal ---
     const svg = container.append("svg")
         .attr("width", "100%")
         .attr("height", "100%")
         .attr("viewBox", `0 0 ${pixelHeight + pixelWidth} ${pixelWidth}`)
         .attr("preserveAspectRatio", "xMidYMid meet");
 
-    // --- NEW: Rotate the entire court 90 degrees ---
     const g = svg.append("g")
         .attr("transform", `translate(${pixelHeight}, 0) rotate(90)`);
 
@@ -32,7 +29,6 @@ function initCourtFilter(data, updateCallback) {
     const hoopBackboardLength = 6;
     const hoopBaselineDist = 4;
 
-    // Court outline
     g.append("rect")
         .attr("width", scale(courtWidth))
         .attr("height", heightScale(courtLength))
@@ -43,16 +39,15 @@ function initCourtFilter(data, updateCallback) {
     g.append("line").attr("y1", heightScale(courtLength / 2)).attr("x1", 0).attr("y2", heightScale(courtLength / 2)).attr("x2", scale(courtWidth)).attr("stroke", "#000").attr("stroke-width", 2);
     g.append("circle").attr("cx", scale(courtWidth / 2)).attr("cy", heightScale(courtLength / 2)).attr("r", scale(centerCourtRadius)).attr("fill", "none").attr("stroke", "#000").attr("stroke-width", 2);
 
-    // Free throws
+    //free throws
     g.append("rect").attr("x", scale((courtWidth - freeThrowWidth) / 2)).attr("y", heightScale(0)).attr("width", scale(freeThrowWidth)).attr("height", heightScale(freeTrowDist)).attr("fill", "none").attr("stroke", "#000").attr("stroke-width", 2);
     const freeThrowArcBottom = d3.arc().innerRadius(scale(freeThrowRadius)).outerRadius(scale(freeThrowRadius)).startAngle(Math.PI).endAngle(2 * Math.PI);
     g.append("path").attr("d", freeThrowArcBottom()).attr("transform", `translate(${scale(courtWidth / 2)}, ${heightScale(freeTrowDist)}) rotate(270)`).attr("fill", "none").attr("stroke", "#000").attr("stroke-width", 2);
 
-    // Corner lines
     g.append("line").attr("x1", scale((courtWidth / 2) - cornerThreePointDist)).attr("y1", heightScale(0)).attr("x2", scale((courtWidth / 2) - cornerThreePointDist)).attr("y2", heightScale(cornerThreeLength)).attr("stroke", "#000").attr("stroke-width", 2);
     g.append("line").attr("x1", scale((courtWidth / 2) + cornerThreePointDist)).attr("y1", heightScale(0)).attr("x2", scale((courtWidth / 2) + cornerThreePointDist)).attr("y2", heightScale(cornerThreeLength)).attr("stroke", "#000").attr("stroke-width", 2);
 
-    // DENSITY PLOT
+    //density plot
     const twoPointData = data.map(d => +d["2P_O"]).filter(d => !isNaN(d));
     const xScale = d3.scaleLinear().domain(d3.extent(twoPointData)).range([scale((courtWidth / 2) - cornerThreePointDist), scale((courtWidth / 2) + cornerThreePointDist)]);
     const histogram = d3.histogram().domain(xScale.domain()).thresholds(xScale.ticks(40));
@@ -68,7 +63,6 @@ function initCourtFilter(data, updateCallback) {
     g.append("path").datum(bins).attr("class", "density-unselected").attr("d", area).attr("fill", "steelblue").attr("opacity", 0.6);
     g.append("path").datum([]).attr("class", "density-selected").attr("d", "").attr("fill", "orange").attr("opacity", 0.85);
 
-    // Draw axis and rotate text back so it is upright
     const xAxis = d3.axisBottom(xScale).ticks(6);
     const axisG = g.append("g").attr("class", "x-axis").attr("transform", `translate(0, ${baselineY})`).call(xAxis);
     axisG.selectAll("text")
@@ -86,8 +80,7 @@ function initCourtFilter(data, updateCallback) {
         .attr("text-anchor", "middle")
         .text("2P_O");
 
-    // Interactive Drag Filter - use overlay rect over density area to capture input
-    // Create a transparent overlay rect that covers the density plot area
+    //dragging filter
     const densityOverlay = g.append("rect")
         .attr("x", densityLeft)
         .attr("y", innerY)
@@ -101,7 +94,7 @@ function initCourtFilter(data, updateCallback) {
     const dragFilter = d3.drag()
         .on("start", function (event) {
             const coords = d3.pointer(event, g.node());
-            dragStartY = coords[0]; // x in the rotated group = y in screen space
+            dragStartY = coords[0]; //x in the rotated group = y in screen space
         })
         .on("drag", function (event) {
             const coords = d3.pointer(event, g.node());
@@ -136,25 +129,23 @@ function initCourtFilter(data, updateCallback) {
     g.append("circle").attr("cx", scale(courtWidth / 2)).attr("cy", mirror(hoopBaselineDist)).attr("r", scale(hoopRadius)).attr("fill", "none").attr("stroke", "#000").attr("stroke-width", 2);
     g.append("line").attr("x1", scale((courtWidth / 2) - (hoopBackboardLength / 2))).attr("y1", mirror(hoopBaselineDist - hoopRadius)).attr("x2", scale((courtWidth / 2) + (hoopBackboardLength / 2))).attr("y2", mirror(hoopBaselineDist - hoopRadius)).attr("stroke", "#000").attr("stroke-width", 2);
 
-    // Add labels for offense and defense sides (horizontal layout)
+    //offense and defense labels
     g.append("text").attr("x", pixelWidth * 0.05).attr("y", pixelHeight * 0.1).attr("text-anchor", "start").attr("font-size", "16px").attr("font-weight", "bold").text("Defense").attr("transform", `rotate(270, ${pixelWidth * 0.05}, ${pixelHeight * 0.1})`);
     g.append("text").attr("x", pixelWidth * 0.05).attr("y", pixelHeight * 0.9).attr("text-anchor", "end").attr("font-size", "16px").attr("font-weight", "bold").attr("transform", `rotate(270, ${pixelWidth * 0.05}, ${pixelHeight * 0.9})`).text("Offense");
 
-    // DENSITY PLOT 2P_D (defense) - on opposite baseline with same functionality
     const twoPointDefData = data.map(d => +d["2P_D"]).filter(d => !isNaN(d));
     const xScaleDef = d3.scaleLinear().domain(d3.extent(twoPointDefData)).range([scale((courtWidth / 2) - cornerThreePointDist), scale((courtWidth / 2) + cornerThreePointDist)]);
     const histogramDef = d3.histogram().domain(xScaleDef.domain()).thresholds(xScaleDef.ticks(40));
     const binsDef = histogramDef(twoPointDefData);
 
-    const baselineYDef = heightScale(0);  // opposite baseline
-    const innerYDef = heightScale(20);  // grows inward
+    const baselineYDef = heightScale(0);  //opposite baseline
+    const innerYDef = heightScale(20);  //grows inward
     const yScaleDef = d3.scaleLinear().domain([0, d3.max(binsDef, d => d.length) || 1]).range([baselineYDef, innerYDef]);
     const areaDef = d3.area().x(d => xScaleDef((d.x0 + d.x1) / 2)).y0(baselineYDef).y1(d => yScaleDef(d.length)).curve(d3.curveBasis);
 
     g.append("path").datum(binsDef).attr("class", "density-unselected-def").attr("d", areaDef).attr("fill", "red").attr("opacity", 0.6);
     g.append("path").datum([]).attr("class", "density-selected-def").attr("d", "").attr("fill", "orange").attr("opacity", 0.85);
 
-    // Draw axis for defense side (top)
     const xAxisDef = d3.axisTop(xScaleDef).ticks(6);
     const axisGDef = g.append("g").attr("class", "x-axis-def").attr("transform", `translate(0, ${baselineYDef})`).call(xAxisDef);
     axisGDef.selectAll("text")
@@ -172,7 +163,6 @@ function initCourtFilter(data, updateCallback) {
         .attr("text-anchor", "middle")
         .text("2P_D");
 
-    // Drag filter overlay for defense density
     const densityDefOverlay = g.append("rect")
         .attr("x", densityLeft)
         .attr("y", baselineYDef)
@@ -196,7 +186,6 @@ function initCourtFilter(data, updateCallback) {
             const selStart = xScaleDef.invert(left);
             const selEnd = xScaleDef.invert(right);
 
-            // Update defense side filter
             updateCallback({ metric: "2P_D", range: [selStart, selEnd] });
 
             const selectedBinsDef = binsDef.filter(b => b.x1 >= selStart && b.x0 <= selEnd);
@@ -206,35 +195,29 @@ function initCourtFilter(data, updateCallback) {
 
     densityDefOverlay.call(dragFilterDef);
 
-    // --- THREE POINT ARC DENSITY (OUTWARD GROWING) ---
-    // Arc geometry
+    //arc geometry
     const r = scale(cornerThreePointDist);
     const cx = scale(courtWidth / 2);
     const cy = heightScale(courtLength - cornerThreeLength);
 
-    // Extract data
     const threePointData = data
         .map(d => +d["3P_O"])
         .filter(d => !isNaN(d));
 
-    // Angle scale (arc is the x-axis)
     const angleScaleThree = d3.scaleLinear()
         .domain(d3.extent(threePointData))
         .range([-Math.PI / 2, Math.PI / 2]);
 
-    // Histogram
     const histogramThree = d3.histogram()
         .domain(angleScaleThree.domain())
         .thresholds(angleScaleThree.ticks(40));
 
     const binsThree = histogramThree(threePointData);
 
-    // Radial scale (grow OUTWARD from arc)
     const radialScaleThree = d3.scaleLinear()
         .domain([0, d3.max(binsThree, d => d.length) || 1])
         .range([r, r + 100]);
 
-    // Area generator in polar coordinates
     const areaThree = d3.area()
         .x0(d => {
             const theta = angleScaleThree((d.x0 + d.x1) / 2);
@@ -254,7 +237,6 @@ function initCourtFilter(data, updateCallback) {
         })
         .curve(d3.curveBasis);
 
-    // Draw density (unselected)
     g.append("path")
         .datum(binsThree)
         .attr("class", "density-unselected-three")
@@ -264,7 +246,6 @@ function initCourtFilter(data, updateCallback) {
         .attr("transform", `rotate(270, ${cx}, ${cy})`)
         .attr("opacity", 0.6);
 
-    // Placeholder for selected overlay
     g.append("path")
         .datum([])
         .attr("class", "density-selected-three")
@@ -274,7 +255,6 @@ function initCourtFilter(data, updateCallback) {
         .attr("transform", `rotate(270, ${cx}, ${cy})`)
         .attr("opacity", 0.85);
 
-    // Tick marks + labels for 3P_O arc (value axis along arc)
     const threePointTicks = angleScaleThree.ticks(5);
     threePointTicks.forEach(t => {
         const theta = angleScaleThree(t);
@@ -315,8 +295,6 @@ function initCourtFilter(data, updateCallback) {
         .text("3P_O")
         .attr("transform", `rotate(270, ${cx}, ${cy}) rotate(-270, ${cx}, ${cy - (r + 34)})`);
 
-    // Drag filter functionality
-    // Use an arc stroke hit-area so this overlay does not block 2P drag regions.
     const densityThreeOverlay = g.append("path")
         .attr("d", d3.arc()
             .innerRadius(r)
@@ -335,7 +313,6 @@ function initCourtFilter(data, updateCallback) {
 
     const dragFilterThree = d3.drag()
         .on("start", function (event) {
-            // Use pointer in overlay's own coordinate space for exact transform alignment.
             const [x, y] = d3.pointer(event, this);
             const distance = Math.sqrt(x * x + y * y);
 
@@ -354,19 +331,15 @@ function initCourtFilter(data, updateCallback) {
             const lower = Math.min(dragStartAngle, angle);
             const upper = Math.max(dragStartAngle, angle);
 
-            // Convert drag angle selection back into 3P_O value range.
             const valA = angleScaleThree.invert(lower);
             const valB = angleScaleThree.invert(upper);
             const selStart = Math.min(valA, valB);
             const selEnd = Math.max(valA, valB);
 
-            // Filter bins by data range overlap.
             const selectedBinsThree = binsThree.filter(b => b.x1 >= selStart && b.x0 <= selEnd);
 
-            // Callback with metric + numeric range (same contract as other court filters).
             updateCallback({ metric: "3P_O", range: [selStart, selEnd] });
 
-            // Update density overlay
             g.select(".density-selected-three")
                 .datum(selectedBinsThree)
                 .attr("transform", `rotate(270, ${cx}, ${cy})`)
@@ -382,7 +355,6 @@ function initCourtFilter(data, updateCallback) {
 
     densityThreeOverlay.call(dragFilterThree);
 
-    // Add 3P_D density on opposite side with same functionality
     const cyDefThree = heightScale(cornerThreeLength);
     const threePointDefData = data
         .map(d => +d["3P_D"])
@@ -439,7 +411,6 @@ function initCourtFilter(data, updateCallback) {
         .attr("transform", `rotate(90, ${cx}, ${cyDefThree})`)
         .attr("opacity", 0.85);
 
-    // Tick marks + labels for 3P_D arc (value axis along arc)
     const threePointTicksDef = angleScaleThreeDef.ticks(5);
     threePointTicksDef.forEach(t => {
         const theta = angleScaleThreeDef(t);
@@ -532,9 +503,4 @@ function initCourtFilter(data, updateCallback) {
         });
 
     densityFourOverlay.call(dragFilterFour);
-
-
-
 }
-
-
