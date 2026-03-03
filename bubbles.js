@@ -45,7 +45,7 @@ function renderBubbles(filteredData) {
     }));
 
     const totalBubbleArea = nodes.length * Math.PI * baseRadius * baseRadius;
-    const packingDensity = 0.5; // lower = more spacing
+    const packingDensity = 0.4; // lower = more spacing
     const requiredArea = totalBubbleArea / packingDensity;
     const virtualHeight = Math.max(height, Math.ceil(requiredArea / width) + margin * 2);
 
@@ -55,8 +55,8 @@ function renderBubbles(filteredData) {
 
     const simulation = d3.forceSimulation(nodes)
         .force("x", d3.forceX(width / 2).strength(0.05))
-        .force("y", d3.forceY(virtualHeight / 2).strength(0.05))
-        .force("collide", d3.forceCollide().radius(d => d.radius + 1).iterations(7)); 
+        .force("y", d3.forceY(virtualHeight / 2).strength(0.07))
+        .force("collide", d3.forceCollide().radius(d => d.radius + 1).iterations(8))
 
     const nodeG = svg.selectAll(".node")
         .data(nodes, d => d.TEAM + d.YEAR)
