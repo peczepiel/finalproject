@@ -95,6 +95,19 @@ function applyAllFilters() {
             return activeFilters.seed.includes(seedNum);
         });
     }
+    if (activeFilters.bracket !== null) {
+        filtered = filtered.filter(d => {
+            const finishRound = parseInt(d["Finish Dum"]);
+            if (isNaN(finishRound)) return false;
+
+            if (activeFilters.bracket === 1) {
+                const postseason = (d.POSTSEASON || "").trim().toUpperCase();
+                return finishRound >= 1 && postseason !== "R68";
+            }
+
+            return finishRound >= activeFilters.bracket;
+        });
+    }
 
     renderBubbles(filtered);
 }
