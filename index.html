@@ -7,12 +7,15 @@
     <title>College Basketball Explorer</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
+        html, body {
+            height: 100%;
+        }
+
         body {
             margin: 0;
             font-family: Arial, sans-serif;
             display: flex;
             flex-direction: column;
-            height: 100vh;
             overflow: hidden;
         }
 
@@ -20,9 +23,10 @@
             display: grid;
             grid-template-columns: 1fr 1fr 1fr; 
             grid-template-rows: 40% 60%; 
-            height: 50%;
+            height: 100vh;
             border-bottom: 2px solid #333;
             background-color: #f8f9fa;
+            overflow: hidden;
         }
 
         .filter-container {
@@ -49,14 +53,11 @@
         }
 
         #bottom-half {
-            height: 50%;
-            padding: 20px;
+            min-height: 40%;
             background-color: #ebebeb;
             overflow-y: auto;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            align-content: flex-start;
+            overflow-x: hidden;
+            position: relative;
         }
 
         .portrait {
@@ -109,12 +110,7 @@
             height: 100%;
         }
 
-        #bottom-half {
-            height: 50%;
-            background-color: #ebebeb;
-            overflow: hidden;
-            position: relative;
-        }
+        /* duplicate #bottom-half rule removed */
 
     </style>
 </head>
@@ -145,7 +141,7 @@
         </div>
     </div>
 
-    <button id="clear-btn" style="position: absolute; right: 25px; top: calc(50% + 20px); z-index: 10; padding: 8px 16px; background: #e74c3c; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Clear Filters</button>
+    <button id="clear-btn" style="position: absolute; right: 25px; top: 61%; z-index: 10; padding: 8px 16px; background: #e74c3c; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Clear Filters</button>
 
     <div id="bottom-half">
         </div>

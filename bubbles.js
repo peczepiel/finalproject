@@ -13,10 +13,6 @@ function renderBubbles(filteredData) {
     const width = container.node().getBoundingClientRect().width;
     const height = container.node().getBoundingClientRect().height;
 
-    const svg = container.append("svg")
-        .attr("width", width)
-        .attr("height", height);
-
     let tooltip = d3.select("body").select(".bubble-tooltip");
     if (tooltip.empty()) {
         tooltip = d3.select("body").append("div")
@@ -49,9 +45,18 @@ function renderBubbles(filteredData) {
         radius: baseRadius
     }));
 
+    const totalBubbleArea = nodes.length * Math.PI * baseRadius * baseRadius;
+    const packingDensity = 0.7; // lower = more spacing
+    const requiredArea = totalBubbleArea / packingDensity;
+    const virtualHeight = Math.max(height, Math.ceil(requiredArea / width) + margin * 2);
+
+    const svg = container.append("svg")
+        .attr("width", width)
+        .attr("height", virtualHeight);
+
     const simulation = d3.forceSimulation(nodes)
         .force("x", d3.forceX(width / 2).strength(0.05))
-        .force("y", d3.forceY(height / 2).strength(0.05))
+        .force("y", d3.forceY(virtualHeight / 2).strength(0.05))
         .force("collide", d3.forceCollide().radius(d => d.radius + 1).iterations(4)); 
 
     const nodeG = svg.selectAll(".node")
@@ -130,7 +135,7 @@ function renderBubbles(filteredData) {
     simulation.on("tick", () => {
         nodeG.attr("transform", d => {
             d.x = Math.max(margin + d.radius, Math.min(width - margin - d.radius, d.x));
-            d.y = Math.max(margin + d.radius, Math.min(height - margin - d.radius, d.y));
+            d.y = Math.max(margin + d.radius, Math.min(virtualHeight - margin - d.radius, d.y));
             return `translate(${d.x},${d.y})`;
         });
     });
