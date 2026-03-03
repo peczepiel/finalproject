@@ -1,506 +1,368 @@
+// court.js
 function initCourtFilter(data, updateCallback) {
     const courtWidth = 50;
     const courtLength = 94;
-    const pixelWidth = 500;
-    const pixelHeight = 940;
+    const halfCourtLength = courtLength / 2;
 
-    const scale = d3.scaleLinear().domain([0, courtWidth]).range([0, pixelWidth]);
-    const heightScale = d3.scaleLinear().domain([0, courtLength]).range([0, pixelHeight]);
-
-    const container = d3.select("#basketball-court");
-    container.html("");
-
-    const svg = container.append("svg")
-        .attr("width", "100%")
-        .attr("height", "100%")
-        .attr("viewBox", `0 0 ${pixelHeight + pixelWidth} ${pixelWidth}`)
-        .attr("preserveAspectRatio", "xMidYMid meet");
-
-    const g = svg.append("g")
-        .attr("transform", `translate(${pixelHeight}, 0) rotate(90)`);
-
-    const cornerThreePointDist = 21.65;
+    const cornerThreePointDist = 18;
     const cornerThreeLength = 9.86;
     const freeTrowDist = 19;
     const freeThrowWidth = 12;
     const freeThrowRadius = 6;
-    const centerCourtRadius = 6;
     const hoopRadius = 0.75;
     const hoopBackboardLength = 6;
     const hoopBaselineDist = 4;
+    const densityArcInsetFeet = 0;
 
-    g.append("rect")
-        .attr("width", scale(courtWidth))
-        .attr("height", heightScale(courtLength))
-        .attr("fill", "#f0f0f0")
-        .attr("stroke", "#000")
-        .attr("stroke-width", 2);
+    function renderHalfCourt(containerSelector, cfg) {
+        const container = d3.select(containerSelector);
+        container.html("");
 
-    g.append("line").attr("y1", heightScale(courtLength / 2)).attr("x1", 0).attr("y2", heightScale(courtLength / 2)).attr("x2", scale(courtWidth)).attr("stroke", "#000").attr("stroke-width", 2);
-    g.append("circle").attr("cx", scale(courtWidth / 2)).attr("cy", heightScale(courtLength / 2)).attr("r", scale(centerCourtRadius)).attr("fill", "none").attr("stroke", "#000").attr("stroke-width", 2);
+        const bounds = container.node().getBoundingClientRect();
+        const width = bounds.width > 0 ? bounds.width : 620;
+        const height = bounds.height > 0 ? bounds.height : 480;
 
-    //free throws
-    g.append("rect").attr("x", scale((courtWidth - freeThrowWidth) / 2)).attr("y", heightScale(0)).attr("width", scale(freeThrowWidth)).attr("height", heightScale(freeTrowDist)).attr("fill", "none").attr("stroke", "#000").attr("stroke-width", 2);
-    const freeThrowArcBottom = d3.arc().innerRadius(scale(freeThrowRadius)).outerRadius(scale(freeThrowRadius)).startAngle(Math.PI).endAngle(2 * Math.PI);
-    g.append("path").attr("d", freeThrowArcBottom()).attr("transform", `translate(${scale(courtWidth / 2)}, ${heightScale(freeTrowDist)}) rotate(270)`).attr("fill", "none").attr("stroke", "#000").attr("stroke-width", 2);
+        const labelBand = Math.max(36, Math.min(52, height * 0.12));
+        const padX = Math.max(10, Math.min(18, width * 0.03));
+        const padBottom = Math.max(8, Math.min(14, height * 0.03));
 
-    g.append("line").attr("x1", scale((courtWidth / 2) - cornerThreePointDist)).attr("y1", heightScale(0)).attr("x2", scale((courtWidth / 2) - cornerThreePointDist)).attr("y2", heightScale(cornerThreeLength)).attr("stroke", "#000").attr("stroke-width", 2);
-    g.append("line").attr("x1", scale((courtWidth / 2) + cornerThreePointDist)).attr("y1", heightScale(0)).attr("x2", scale((courtWidth / 2) + cornerThreePointDist)).attr("y2", heightScale(cornerThreeLength)).attr("stroke", "#000").attr("stroke-width", 2);
+        const usableW = width - (2 * padX);
+        const usableH = height - labelBand - padBottom;
+        const feetToPx = Math.min(usableW / courtWidth, usableH / halfCourtLength);
+        const drawW = courtWidth * feetToPx;
+        const drawH = halfCourtLength * feetToPx;
+        const drawX0 = (width - drawW) / 2;
+        const drawY0 = labelBand + ((usableH - drawH) / 2);
+        const titleSize = Math.max(22, Math.min(34, feetToPx * 2.1));
+        const axisTickSize = Math.max(11, Math.min(14, feetToPx * 0.85));
+        const metricLabelSize = Math.max(14, Math.min(20, feetToPx * 1.2));
+        const arcTickSize = Math.max(11, Math.min(15, feetToPx * 0.95));
+        const arcLabelSize = Math.max(14, Math.min(20, feetToPx * 1.25));
+        const radialOut = Math.max(44, Math.min(82, drawH * 0.22));
 
-    //density plot
-    const twoPointData = data.map(d => +d["2P_O"]).filter(d => !isNaN(d));
-    const xScale = d3.scaleLinear().domain(d3.extent(twoPointData)).range([scale((courtWidth / 2) - cornerThreePointDist), scale((courtWidth / 2) + cornerThreePointDist)]);
-    const histogram = d3.histogram().domain(xScale.domain()).thresholds(xScale.ticks(40));
-    const bins = histogram(twoPointData);
+        const xScaleCourt = d3.scaleLinear().domain([0, courtWidth]).range([drawX0, drawX0 + drawW]);
+        const yScaleHalf = d3.scaleLinear().domain([0, halfCourtLength]).range([drawY0, drawY0 + drawH]);
+        const yFromBaseline = d => yScaleHalf(halfCourtLength - d);
 
-    const baselineY = heightScale(courtLength);
-    const innerY = heightScale(courtLength - 15);
-    const densityLeft = scale((courtWidth / 2) - cornerThreePointDist);
-    const densityRight = scale((courtWidth / 2) + cornerThreePointDist);
-    const yScale = d3.scaleLinear().domain([0, d3.max(bins, d => d.length) || 1]).range([baselineY, innerY]);
-    const area = d3.area().x(d => xScale((d.x0 + d.x1) / 2)).y0(baselineY).y1(d => yScale(d.length)).curve(d3.curveBasis);
+        const svg = container.append("svg")
+            .attr("width", "100%")
+            .attr("height", "100%")
+            .attr("viewBox", `0 0 ${width} ${height}`)
+            .attr("preserveAspectRatio", "xMidYMid meet");
 
-    g.append("path").datum(bins).attr("class", "density-unselected").attr("d", area).attr("fill", "steelblue").attr("opacity", 0.6);
-    g.append("path").datum([]).attr("class", "density-selected").attr("d", "").attr("fill", "orange").attr("opacity", 0.85);
+        const g = svg.append("g");
 
-    const xAxis = d3.axisBottom(xScale).ticks(6);
-    const axisG = g.append("g").attr("class", "x-axis").attr("transform", `translate(0, ${baselineY})`).call(xAxis);
-    axisG.selectAll("text")
-        .attr("transform", "rotate(-90)")
-        .style("text-anchor", "end")
-        .attr("dx", "-10px")
-        .attr("dy", "-5px")
-        .attr("font-size", "12px");
-    axisG.append("text")
-        .attr("x", (densityLeft + densityRight) / 2)
-        .attr("y", -28)
-        .attr("fill", "#000")
-        .attr("font-size", "12px")
-        .attr("font-weight", "bold")
-        .attr("text-anchor", "middle")
-        .text("2P_O");
-
-    //dragging filter
-    const densityOverlay = g.append("rect")
-        .attr("x", densityLeft)
-        .attr("y", innerY)
-        .attr("width", densityRight - densityLeft)
-        .attr("height", baselineY - innerY)
-        .attr("fill", "none")
-        .attr("pointer-events", "all")
-        .style("cursor", "crosshair");
-
-    let dragStartY = null;
-    const dragFilter = d3.drag()
-        .on("start", function (event) {
-            const coords = d3.pointer(event, g.node());
-            dragStartY = coords[0]; //x in the rotated group = y in screen space
-        })
-        .on("drag", function (event) {
-            const coords = d3.pointer(event, g.node());
-            const y1 = coords[0];
-            const [left, right] = dragStartY < y1 ? [dragStartY, y1] : [y1, dragStartY];
-
-            const selStart = xScale.invert(left);
-            const selEnd = xScale.invert(right);
-
-            updateCallback({ metric: "2P_O", range: [selStart, selEnd] });
-
-            const selectedBins = bins.filter(b => b.x1 >= selStart && b.x0 <= selEnd);
-            g.selectAll(".density-selected").datum(selectedBins).attr("d", selectedBins.length ? area : "");
-            g.selectAll(".density-unselected").attr("opacity", selectedBins.length ? 0.18 : 0.6);
-        });
-
-    densityOverlay.call(dragFilter);
-
-
-    const threePointArc = d3.arc().innerRadius(scale(cornerThreePointDist)).outerRadius(scale(cornerThreePointDist)).startAngle(-Math.PI / 2).endAngle(Math.PI / 2);
-    g.append("path").attr("d", threePointArc()).attr("transform", `translate(${scale(courtWidth / 2)}, ${heightScale(cornerThreeLength)}) rotate(180)`).attr("fill", "none").attr("stroke", "#000").attr("stroke-width", 2);
-    g.append("circle").attr("cx", scale(courtWidth / 2)).attr("cy", heightScale(hoopBaselineDist)).attr("r", scale(hoopRadius)).attr("fill", "none").attr("stroke", "#000").attr("stroke-width", 2);
-    g.append("line").attr("x1", scale((courtWidth / 2) - (hoopBackboardLength / 2))).attr("y1", heightScale(hoopBaselineDist - hoopRadius)).attr("x2", scale((courtWidth / 2) + (hoopBackboardLength / 2))).attr("y2", heightScale(hoopBaselineDist - hoopRadius)).attr("stroke", "#000").attr("stroke-width", 2);
-
-    const mirror = y => heightScale(courtLength - y);
-    g.append("rect").attr("x", scale((courtWidth - freeThrowWidth) / 2)).attr("y", mirror(0) - heightScale(freeTrowDist)).attr("width", scale(freeThrowWidth)).attr("height", heightScale(freeTrowDist)).attr("fill", "none").attr("stroke", "#000").attr("stroke-width", 2);
-    const freeThrowArcTop = d3.arc().innerRadius(scale(freeThrowRadius)).outerRadius(scale(freeThrowRadius)).startAngle(0).endAngle(Math.PI);
-    g.append("path").attr("d", freeThrowArcTop()).attr("transform", `translate(${scale(courtWidth / 2)}, ${mirror(freeTrowDist)}) rotate(270)`).attr("fill", "none").attr("stroke", "#000").attr("stroke-width", 2);
-    g.append("line").attr("x1", scale((courtWidth / 2) - cornerThreePointDist)).attr("y1", mirror(0)).attr("x2", scale((courtWidth / 2) - cornerThreePointDist)).attr("y2", mirror(cornerThreeLength)).attr("stroke", "#000").attr("stroke-width", 2);
-    g.append("line").attr("x1", scale((courtWidth / 2) + cornerThreePointDist)).attr("y1", mirror(0)).attr("x2", scale((courtWidth / 2) + cornerThreePointDist)).attr("y2", mirror(cornerThreeLength)).attr("stroke", "#000").attr("stroke-width", 2);
-    g.append("path").attr("d", threePointArc()).attr("transform", `translate(${scale(courtWidth / 2)}, ${mirror(cornerThreeLength)})`).attr("fill", "none").attr("stroke", "#000").attr("stroke-width", 2);
-    g.append("circle").attr("cx", scale(courtWidth / 2)).attr("cy", mirror(hoopBaselineDist)).attr("r", scale(hoopRadius)).attr("fill", "none").attr("stroke", "#000").attr("stroke-width", 2);
-    g.append("line").attr("x1", scale((courtWidth / 2) - (hoopBackboardLength / 2))).attr("y1", mirror(hoopBaselineDist - hoopRadius)).attr("x2", scale((courtWidth / 2) + (hoopBackboardLength / 2))).attr("y2", mirror(hoopBaselineDist - hoopRadius)).attr("stroke", "#000").attr("stroke-width", 2);
-
-    //offense and defense labels
-    g.append("text").attr("x", pixelWidth * 0.05).attr("y", pixelHeight * 0.1).attr("text-anchor", "start").attr("font-size", "16px").attr("font-weight", "bold").text("Defense").attr("transform", `rotate(270, ${pixelWidth * 0.05}, ${pixelHeight * 0.1})`);
-    g.append("text").attr("x", pixelWidth * 0.05).attr("y", pixelHeight * 0.9).attr("text-anchor", "end").attr("font-size", "16px").attr("font-weight", "bold").attr("transform", `rotate(270, ${pixelWidth * 0.05}, ${pixelHeight * 0.9})`).text("Offense");
-
-    const twoPointDefData = data.map(d => +d["2P_D"]).filter(d => !isNaN(d));
-    const xScaleDef = d3.scaleLinear().domain(d3.extent(twoPointDefData)).range([scale((courtWidth / 2) - cornerThreePointDist), scale((courtWidth / 2) + cornerThreePointDist)]);
-    const histogramDef = d3.histogram().domain(xScaleDef.domain()).thresholds(xScaleDef.ticks(40));
-    const binsDef = histogramDef(twoPointDefData);
-
-    const baselineYDef = heightScale(0);  //opposite baseline
-    const innerYDef = heightScale(20);  //grows inward
-    const yScaleDef = d3.scaleLinear().domain([0, d3.max(binsDef, d => d.length) || 1]).range([baselineYDef, innerYDef]);
-    const areaDef = d3.area().x(d => xScaleDef((d.x0 + d.x1) / 2)).y0(baselineYDef).y1(d => yScaleDef(d.length)).curve(d3.curveBasis);
-
-    g.append("path").datum(binsDef).attr("class", "density-unselected-def").attr("d", areaDef).attr("fill", "red").attr("opacity", 0.6);
-    g.append("path").datum([]).attr("class", "density-selected-def").attr("d", "").attr("fill", "orange").attr("opacity", 0.85);
-
-    const xAxisDef = d3.axisTop(xScaleDef).ticks(6);
-    const axisGDef = g.append("g").attr("class", "x-axis-def").attr("transform", `translate(0, ${baselineYDef})`).call(xAxisDef);
-    axisGDef.selectAll("text")
-        .attr("transform", "rotate(-90)")
-        .style("text-anchor", "end")
-        .attr("dx", "-10px")
-        .attr("dy", "-5px")
-        .attr("font-size", "12px");
-    axisGDef.append("text")
-        .attr("x", (densityLeft + densityRight) / 2)
-        .attr("y", 30)
-        .attr("fill", "#000")
-        .attr("font-size", "12px")
-        .attr("font-weight", "bold")
-        .attr("text-anchor", "middle")
-        .text("2P_D");
-
-    const densityDefOverlay = g.append("rect")
-        .attr("x", densityLeft)
-        .attr("y", baselineYDef)
-        .attr("width", densityRight - densityLeft)
-        .attr("height", innerYDef - baselineYDef)
-        .attr("fill", "none")
-        .attr("pointer-events", "all")
-        .style("cursor", "crosshair");
-
-    let dragStartYDef = null;
-    const dragFilterDef = d3.drag()
-        .on("start", function (event) {
-            const coords = d3.pointer(event, g.node());
-            dragStartYDef = coords[0];
-        })
-        .on("drag", function (event) {
-            const coords = d3.pointer(event, g.node());
-            const y1 = coords[0];
-            const [left, right] = dragStartYDef < y1 ? [dragStartYDef, y1] : [y1, dragStartYDef];
-
-            const selStart = xScaleDef.invert(left);
-            const selEnd = xScaleDef.invert(right);
-
-            updateCallback({ metric: "2P_D", range: [selStart, selEnd] });
-
-            const selectedBinsDef = binsDef.filter(b => b.x1 >= selStart && b.x0 <= selEnd);
-            g.selectAll(".density-selected-def").datum(selectedBinsDef).attr("d", selectedBinsDef.length ? areaDef : "");
-            g.selectAll(".density-unselected-def").attr("opacity", selectedBinsDef.length ? 0.18 : 0.6);
-        });
-
-    densityDefOverlay.call(dragFilterDef);
-
-    //arc geometry
-    const r = scale(cornerThreePointDist);
-    const cx = scale(courtWidth / 2);
-    const cy = heightScale(courtLength - cornerThreeLength);
-
-    const threePointData = data
-        .map(d => +d["3P_O"])
-        .filter(d => !isNaN(d));
-
-    const angleScaleThree = d3.scaleLinear()
-        .domain(d3.extent(threePointData))
-        .range([-Math.PI / 2, Math.PI / 2]);
-
-    const histogramThree = d3.histogram()
-        .domain(angleScaleThree.domain())
-        .thresholds(angleScaleThree.ticks(40));
-
-    const binsThree = histogramThree(threePointData);
-
-    const radialScaleThree = d3.scaleLinear()
-        .domain([0, d3.max(binsThree, d => d.length) || 1])
-        .range([r, r + 100]);
-
-    const areaThree = d3.area()
-        .x0(d => {
-            const theta = angleScaleThree((d.x0 + d.x1) / 2);
-            return cx + r * Math.cos(theta);
-        })
-        .y0(d => {
-            const theta = angleScaleThree((d.x0 + d.x1) / 2);
-            return cy + r * Math.sin(theta);
-        })
-        .x1(d => {
-            const theta = angleScaleThree((d.x0 + d.x1) / 2);
-            return cx + radialScaleThree(d.length) * Math.cos(theta);
-        })
-        .y1(d => {
-            const theta = angleScaleThree((d.x0 + d.x1) / 2);
-            return cy + radialScaleThree(d.length) * Math.sin(theta);
-        })
-        .curve(d3.curveBasis);
-
-    g.append("path")
-        .datum(binsThree)
-        .attr("class", "density-unselected-three")
-        .attr("d", areaThree)
-        .attr("fill", "green")
-        .attr("pointer-events", "none")
-        .attr("transform", `rotate(270, ${cx}, ${cy})`)
-        .attr("opacity", 0.6);
-
-    g.append("path")
-        .datum([])
-        .attr("class", "density-selected-three")
-        .attr("d", "")
-        .attr("fill", "orange")
-        .attr("pointer-events", "none")
-        .attr("transform", `rotate(270, ${cx}, ${cy})`)
-        .attr("opacity", 0.85);
-
-    const threePointTicks = angleScaleThree.ticks(5);
-    threePointTicks.forEach(t => {
-        const theta = angleScaleThree(t);
-        const tickInner = r - 5;
-        const tickOuter = r + 8;
-        const x1 = cx + tickInner * Math.cos(theta);
-        const y1 = cy + tickInner * Math.sin(theta);
-        const x2 = cx + tickOuter * Math.cos(theta);
-        const y2 = cy + tickOuter * Math.sin(theta);
-        const lx = cx + (r + 22) * Math.cos(theta);
-        const ly = cy + (r + 22) * Math.sin(theta);
+        g.append("rect")
+            .attr("x", xScaleCourt(0))
+            .attr("y", yScaleHalf(0))
+            .attr("width", xScaleCourt(courtWidth) - xScaleCourt(0))
+            .attr("height", yScaleHalf(halfCourtLength) - yScaleHalf(0))
+            .attr("fill", "#f5f5f5")
+            .attr("stroke", "#000")
+            .attr("stroke-width", 2);
 
         g.append("line")
-            .attr("x1", x1)
-            .attr("y1", y1)
-            .attr("x2", x2)
-            .attr("y2", y2)
-            .attr("stroke", "#222")
-            .attr("stroke-width", 1)
-            .attr("transform", `rotate(270, ${cx}, ${cy})`);
+            .attr("x1", xScaleCourt((courtWidth / 2) - cornerThreePointDist))
+            .attr("x2", xScaleCourt((courtWidth / 2) - cornerThreePointDist))
+            .attr("y1", yFromBaseline(0))
+            .attr("y2", yFromBaseline(cornerThreeLength))
+            .attr("stroke", "#000")
+            .attr("stroke-width", 2);
+
+        g.append("line")
+            .attr("x1", xScaleCourt((courtWidth / 2) + cornerThreePointDist))
+            .attr("x2", xScaleCourt((courtWidth / 2) + cornerThreePointDist))
+            .attr("y1", yFromBaseline(0))
+            .attr("y2", yFromBaseline(cornerThreeLength))
+            .attr("stroke", "#000")
+            .attr("stroke-width", 2);
+
+        g.append("rect")
+            .attr("x", xScaleCourt((courtWidth - freeThrowWidth) / 2))
+            .attr("y", Math.min(yFromBaseline(0), yFromBaseline(freeTrowDist)))
+            .attr("width", xScaleCourt(freeThrowWidth) - xScaleCourt(0))
+            .attr("height", Math.abs(yFromBaseline(freeTrowDist) - yFromBaseline(0)))
+            .attr("fill", "none")
+            .attr("stroke", "#000")
+            .attr("stroke-width", 2);
+
+        const freeThrowArc = d3.arc()
+            .innerRadius(xScaleCourt(freeThrowRadius) - xScaleCourt(0))
+            .outerRadius(xScaleCourt(freeThrowRadius) - xScaleCourt(0))
+            .startAngle(0)
+            .endAngle(Math.PI);
+
+        g.append("path")
+            .attr("d", freeThrowArc())
+            .attr("transform", `translate(${xScaleCourt(courtWidth / 2)}, ${yFromBaseline(freeTrowDist)}) rotate(270)`)
+            .attr("fill", "none")
+            .attr("stroke", "#000")
+            .attr("stroke-width", 2);
+
+        const threePointArc = d3.arc()
+            .innerRadius(xScaleCourt(cornerThreePointDist) - xScaleCourt(0))
+            .outerRadius(xScaleCourt(cornerThreePointDist) - xScaleCourt(0))
+            .startAngle(-Math.PI / 2)
+            .endAngle(Math.PI / 2);
+
+        g.append("path")
+            .attr("d", threePointArc())
+            .attr("transform", `translate(${xScaleCourt(courtWidth / 2)}, ${yFromBaseline(cornerThreeLength)})`)
+            .attr("fill", "none")
+            .attr("stroke", "#000")
+            .attr("stroke-width", 2);
+
+        g.append("circle")
+            .attr("cx", xScaleCourt(courtWidth / 2))
+            .attr("cy", yFromBaseline(hoopBaselineDist))
+            .attr("r", xScaleCourt(hoopRadius) - xScaleCourt(0))
+            .attr("fill", "none")
+            .attr("stroke", "#000")
+            .attr("stroke-width", 2);
+
+        g.append("line")
+            .attr("x1", xScaleCourt((courtWidth / 2) - (hoopBackboardLength / 2)))
+            .attr("x2", xScaleCourt((courtWidth / 2) + (hoopBackboardLength / 2)))
+            .attr("y1", yFromBaseline(hoopBaselineDist - hoopRadius))
+            .attr("y2", yFromBaseline(hoopBaselineDist - hoopRadius))
+            .attr("stroke", "#000")
+            .attr("stroke-width", 2);
 
         g.append("text")
-            .attr("x", lx)
-            .attr("y", ly)
+            .attr("x", xScaleCourt(courtWidth / 2))
+            .attr("y", labelBand - 10)
             .attr("text-anchor", "middle")
-            .attr("font-size", "10px")
-            .attr("fill", "#111")
-            .text(d3.format(".1f")(t))
-            .attr("transform", `rotate(270, ${cx}, ${cy}) rotate(-270, ${lx}, ${ly})`);
-    });
-    g.append("text")
-        .attr("x", cx)
-        .attr("y", cy - (r + 34))
-        .attr("text-anchor", "middle")
-        .attr("font-size", "12px")
-        .attr("font-weight", "bold")
-        .attr("fill", "#000")
-        .text("3P_O")
-        .attr("transform", `rotate(270, ${cx}, ${cy}) rotate(-270, ${cx}, ${cy - (r + 34)})`);
+            .attr("font-size", `${titleSize}px`)
+            .attr("font-weight", "bold")
+            .text(cfg.title);
 
-    const densityThreeOverlay = g.append("path")
-        .attr("d", d3.arc()
-            .innerRadius(r)
-            .outerRadius(r)
-            .startAngle(-Math.PI / 2)
-            .endAngle(Math.PI / 2)())
-        .attr("transform", `translate(${cx}, ${cy}) rotate(270)`)
-        .attr("fill", "none")
-        .attr("stroke", "transparent")
-        .attr("stroke-width", 50)
-        .attr("pointer-events", "stroke")
-        .style("cursor", "crosshair");
+        // 2P density
+        const twoPointData = data.map(d => +d[cfg.twoMetric]).filter(d => !isNaN(d));
+        const densityLeft = xScaleCourt((courtWidth / 2) - cornerThreePointDist);
+        const densityRight = xScaleCourt((courtWidth / 2) + cornerThreePointDist);
+        const xScale = d3.scaleLinear().domain(d3.extent(twoPointData)).range([densityLeft, densityRight]);
+        const bins = d3.histogram().domain(xScale.domain()).thresholds(xScale.ticks(40))(twoPointData);
 
-    let dragStartAngle = null;
-    const clampAngle = a => Math.max(-Math.PI / 2, Math.min(Math.PI / 2, a));
+        const baselineY = yFromBaseline(0);
+        const innerY = yFromBaseline(cfg.twoInnerFeet);
+        const yScale = d3.scaleLinear().domain([0, d3.max(bins, d => d.length) || 1]).range([baselineY, innerY]);
+        const area = d3.area()
+            .x(d => xScale((d.x0 + d.x1) / 2))
+            .y0(baselineY)
+            .y1(d => yScale(d.length))
+            .curve(d3.curveBasis);
 
-    const dragFilterThree = d3.drag()
-        .on("start", function (event) {
-            const [x, y] = d3.pointer(event, this);
-            const distance = Math.sqrt(x * x + y * y);
+        const twoUnselected = g.append("path")
+            .datum(bins)
+            .attr("d", area)
+            .attr("fill", cfg.twoColor)
+            .attr("opacity", 0.6);
 
-            if (Math.abs(distance - r) > 25) {
+        const twoSelected = g.append("path")
+            .datum([])
+            .attr("d", "")
+            .attr("fill", "orange")
+            .attr("opacity", 0.85);
+
+        const axisG = g.append("g")
+            .attr("transform", `translate(0, ${baselineY})`)
+            .call(d3.axisBottom(xScale).ticks(6));
+
+        axisG.selectAll("text").attr("font-size", `${axisTickSize}px`).attr("font-weight", "600");
+        axisG.selectAll("line").attr("stroke-width", 1.5);
+        axisG.append("text")
+            .attr("x", (densityLeft + densityRight) / 2)
+            .attr("y", 38)
+            .attr("fill", "#000")
+            .attr("font-size", `${metricLabelSize}px`)
+            .attr("font-weight", "bold")
+            .attr("text-anchor", "middle")
+            .text(cfg.twoMetric);
+
+        const densityOverlay = g.append("rect")
+            .attr("x", densityLeft)
+            .attr("y", innerY)
+            .attr("width", densityRight - densityLeft)
+            .attr("height", baselineY - innerY)
+            .attr("fill", "none")
+            .attr("pointer-events", "all")
+            .style("cursor", "crosshair");
+
+        let dragStartY = null;
+        const dragFilter = d3.drag()
+            .on("start", function (event) {
+                const [x] = d3.pointer(event, g.node());
+                dragStartY = x;
+            })
+            .on("drag", function (event) {
+                const [x] = d3.pointer(event, g.node());
+                const [left, right] = dragStartY < x ? [dragStartY, x] : [x, dragStartY];
+                const selStart = xScale.invert(left);
+                const selEnd = xScale.invert(right);
+
+                updateCallback({ metric: cfg.twoMetric, range: [selStart, selEnd] });
+
+                const selectedBins = bins.filter(b => b.x1 >= selStart && b.x0 <= selEnd);
+                twoSelected.datum(selectedBins).attr("d", selectedBins.length ? area : "");
+                twoUnselected.attr("opacity", selectedBins.length ? 0.18 : 0.6);
+            });
+
+        densityOverlay.call(dragFilter);
+
+        // 3P density
+        const r = xScaleCourt(cornerThreePointDist - densityArcInsetFeet) - xScaleCourt(0);
+        const cx = xScaleCourt(courtWidth / 2);
+        const cy = yFromBaseline(cornerThreeLength);
+
+        const threeData = data.map(d => +d[cfg.threeMetric]).filter(d => !isNaN(d));
+        const angleScale = d3.scaleLinear().domain(d3.extent(threeData)).range([-Math.PI / 2, Math.PI / 2]);
+        const binsThree = d3.histogram().domain(angleScale.domain()).thresholds(angleScale.ticks(40))(threeData);
+        const radialScale = d3.scaleLinear().domain([0, d3.max(binsThree, d => d.length) || 1]).range([r, r + radialOut]);
+
+        const areaThree = d3.area()
+            .x0(d => {
+                const theta = angleScale((d.x0 + d.x1) / 2);
+                return cx + r * Math.cos(theta);
+            })
+            .y0(d => {
+                const theta = angleScale((d.x0 + d.x1) / 2);
+                return cy + r * Math.sin(theta);
+            })
+            .x1(d => {
+                const theta = angleScale((d.x0 + d.x1) / 2);
+                return cx + radialScale(d.length) * Math.cos(theta);
+            })
+            .y1(d => {
+                const theta = angleScale((d.x0 + d.x1) / 2);
+                return cy + radialScale(d.length) * Math.sin(theta);
+            })
+            .curve(d3.curveBasis);
+
+        const threeUnselected = g.append("path")
+            .datum(binsThree)
+            .attr("d", areaThree)
+            .attr("fill", cfg.threeColor)
+            .attr("pointer-events", "none")
+            .attr("transform", `rotate(270, ${cx}, ${cy})`)
+            .attr("opacity", 0.6);
+
+        const threeSelected = g.append("path")
+            .datum([])
+            .attr("d", "")
+            .attr("fill", "orange")
+            .attr("pointer-events", "none")
+            .attr("transform", `rotate(270, ${cx}, ${cy})`)
+            .attr("opacity", 0.85);
+
+        const threeTicks = angleScale.ticks(5);
+        threeTicks.forEach(t => {
+            const theta = angleScale(t);
+            const tickInner = r - 8;
+            const tickOuter = r + 12;
+            const x1 = cx + tickInner * Math.cos(theta);
+            const y1 = cy + tickInner * Math.sin(theta);
+            const x2 = cx + tickOuter * Math.cos(theta);
+            const y2 = cy + tickOuter * Math.sin(theta);
+            const lx = cx + (r + 22) * Math.cos(theta);
+            const ly = cy + (r + 22) * Math.sin(theta);
+
+            g.append("line")
+                .attr("x1", x1)
+                .attr("y1", y1)
+                .attr("x2", x2)
+                .attr("y2", y2)
+                .attr("stroke", "#222")
+                .attr("stroke-width", 2)
+                .attr("transform", `rotate(270, ${cx}, ${cy})`);
+
+            g.append("text")
+                .attr("x", lx)
+                .attr("y", ly)
+                .attr("text-anchor", "middle")
+                .attr("font-size", `${arcTickSize}px`)
+                .attr("fill", "#111")
+                .text(d3.format(".1f")(t))
+                .attr("transform", `rotate(270, ${cx}, ${cy}) rotate(-270, ${lx}, ${ly})`);
+        });
+
+        g.append("text")
+            .attr("x", cx)
+            .attr("y", cy - (r + 34))
+            .attr("text-anchor", "middle")
+            .attr("font-size", `${arcLabelSize}px`)
+            .attr("font-weight", "bold")
+            .attr("fill", "#000")
+            .text(cfg.threeMetric)
+            .attr("transform", `rotate(270, ${cx}, ${cy}) rotate(-270, ${cx}, ${cy - (r + 34)})`);
+
+        const overlayThree = g.append("path")
+            .attr("d", d3.arc().innerRadius(r).outerRadius(r).startAngle(-Math.PI / 2).endAngle(Math.PI / 2)())
+            .attr("transform", `translate(${cx}, ${cy}) rotate(270)`)
+            .attr("fill", "none")
+            .attr("stroke", "transparent")
+            .attr("stroke-width", 50)
+            .attr("pointer-events", "stroke")
+            .style("cursor", "crosshair");
+
+        let dragStartAngle = null;
+        const clampAngle = a => Math.max(-Math.PI / 2, Math.min(Math.PI / 2, a));
+
+        const dragFilterThree = d3.drag()
+            .on("start", function (event) {
+                const [x, y] = d3.pointer(event, this);
+                const distance = Math.sqrt(x * x + y * y);
+                if (Math.abs(distance - r) > 25) {
+                    dragStartAngle = null;
+                    return;
+                }
+                dragStartAngle = clampAngle(Math.atan2(y, x));
+            })
+            .on("drag", function (event) {
+                if (dragStartAngle === null) return;
+
+                const [x, y] = d3.pointer(event, this);
+                const angle = clampAngle(Math.atan2(y, x));
+                const lower = Math.min(dragStartAngle, angle);
+                const upper = Math.max(dragStartAngle, angle);
+
+                const valA = angleScale.invert(lower);
+                const valB = angleScale.invert(upper);
+                const selStart = Math.min(valA, valB);
+                const selEnd = Math.max(valA, valB);
+                const selectedBins = binsThree.filter(b => b.x1 >= selStart && b.x0 <= selEnd);
+
+                updateCallback({ metric: cfg.threeMetric, range: [selStart, selEnd] });
+
+                threeSelected.datum(selectedBins)
+                    .attr("transform", `rotate(270, ${cx}, ${cy})`)
+                    .attr("d", selectedBins.length ? areaThree : "");
+
+                threeUnselected
+                    .attr("transform", `rotate(270, ${cx}, ${cy})`)
+                    .attr("opacity", selectedBins.length ? 0.18 : 0.6);
+            })
+            .on("end", function () {
                 dragStartAngle = null;
-                return;
-            }
+            });
 
-            dragStartAngle = clampAngle(Math.atan2(y, x));
-        })
-        .on("drag", function (event) {
-            if (dragStartAngle === null) return;
+        overlayThree.call(dragFilterThree);
+    }
 
-            const [x, y] = d3.pointer(event, this);
-            const angle = clampAngle(Math.atan2(y, x));
-            const lower = Math.min(dragStartAngle, angle);
-            const upper = Math.max(dragStartAngle, angle);
-
-            const valA = angleScaleThree.invert(lower);
-            const valB = angleScaleThree.invert(upper);
-            const selStart = Math.min(valA, valB);
-            const selEnd = Math.max(valA, valB);
-
-            const selectedBinsThree = binsThree.filter(b => b.x1 >= selStart && b.x0 <= selEnd);
-
-            updateCallback({ metric: "3P_O", range: [selStart, selEnd] });
-
-            g.select(".density-selected-three")
-                .datum(selectedBinsThree)
-                .attr("transform", `rotate(270, ${cx}, ${cy})`)
-                .attr("d", selectedBinsThree.length ? areaThree : "");
-
-            g.select(".density-unselected-three")
-                .attr("transform", `rotate(270, ${cx}, ${cy})`)
-                .attr("opacity", selectedBinsThree.length ? 0.18 : 0.6);
-        })
-        .on("end", function () {
-            dragStartAngle = null;
-        });
-
-    densityThreeOverlay.call(dragFilterThree);
-
-    const cyDefThree = heightScale(cornerThreeLength);
-    const threePointDefData = data
-        .map(d => +d["3P_D"])
-        .filter(d => !isNaN(d));
-
-    const angleScaleThreeDef = d3.scaleLinear()
-        .domain(d3.extent(threePointDefData))
-        .range([-Math.PI / 2, Math.PI / 2]);
-
-    const histogramFour = d3.histogram()
-        .domain(angleScaleThreeDef.domain())
-        .thresholds(angleScaleThreeDef.ticks(40));
-
-    const binsFour = histogramFour(threePointDefData);
-
-    const radialScaleThreeDef = d3.scaleLinear()
-        .domain([0, d3.max(binsFour, d => d.length) || 1])
-        .range([r, r + 100]);
-
-    const areaFour = d3.area()
-        .x0(d => {
-            const theta = angleScaleThreeDef((d.x0 + d.x1) / 2);
-            return cx + r * Math.cos(theta);
-        })
-        .y0(d => {
-            const theta = angleScaleThreeDef((d.x0 + d.x1) / 2);
-            return cyDefThree + r * Math.sin(theta);
-        })
-        .x1(d => {
-            const theta = angleScaleThreeDef((d.x0 + d.x1) / 2);
-            return cx + radialScaleThreeDef(d.length) * Math.cos(theta);
-        })
-        .y1(d => {
-            const theta = angleScaleThreeDef((d.x0 + d.x1) / 2);
-            return cyDefThree + radialScaleThreeDef(d.length) * Math.sin(theta);
-        })
-        .curve(d3.curveBasis);
-
-    g.append("path")
-        .datum(binsFour)
-        .attr("class", "density-unselected-three-def")
-        .attr("d", areaFour)
-        .attr("fill", "red")
-        .attr("pointer-events", "none")
-        .attr("transform", `rotate(90, ${cx}, ${cyDefThree})`)
-        .attr("opacity", 0.6);
-
-    g.append("path")
-        .datum([])
-        .attr("class", "density-selected-three-def")
-        .attr("d", "")
-        .attr("fill", "orange")
-        .attr("pointer-events", "none")
-        .attr("transform", `rotate(90, ${cx}, ${cyDefThree})`)
-        .attr("opacity", 0.85);
-
-    const threePointTicksDef = angleScaleThreeDef.ticks(5);
-    threePointTicksDef.forEach(t => {
-        const theta = angleScaleThreeDef(t);
-        const tickInner = r - 5;
-        const tickOuter = r + 8;
-        const x1 = cx + tickInner * Math.cos(theta);
-        const y1 = cyDefThree + tickInner * Math.sin(theta);
-        const x2 = cx + tickOuter * Math.cos(theta);
-        const y2 = cyDefThree + tickOuter * Math.sin(theta);
-        const lx = cx + (r + 22) * Math.cos(theta);
-        const ly = cyDefThree + (r + 22) * Math.sin(theta);
-
-        g.append("line")
-            .attr("x1", x1)
-            .attr("y1", y1)
-            .attr("x2", x2)
-            .attr("y2", y2)
-            .attr("stroke", "#222")
-            .attr("stroke-width", 1)
-            .attr("transform", `rotate(90, ${cx}, ${cyDefThree})`);
-
-        g.append("text")
-            .attr("x", lx)
-            .attr("y", ly)
-            .attr("text-anchor", "middle")
-            .attr("font-size", "10px")
-            .attr("fill", "#111")
-            .text(d3.format(".1f")(t))
-            .attr("transform", `rotate(90, ${cx}, ${cyDefThree}) rotate(-90, ${lx}, ${ly})`);
+    renderHalfCourt("#basketball-court-off", {
+        title: "Offense",
+        twoMetric: "2P_O",
+        twoInnerFeet: 15,
+        twoColor: "steelblue",
+        threeMetric: "3P_O",
+        threeColor: "green"
     });
-    g.append("text")
-        .attr("x", cx)
-        .attr("y", cyDefThree - (r + 34))
-        .attr("text-anchor", "middle")
-        .attr("font-size", "12px")
-        .attr("font-weight", "bold")
-        .attr("fill", "#000")
-        .text("3P_D")
-        .attr("transform", `rotate(90, ${cx}, ${cyDefThree}) rotate(-90, ${cx}, ${cyDefThree - (r + 34)})`);
 
-    const densityFourOverlay = g.append("path")
-        .attr("d", d3.arc()
-            .innerRadius(r)
-            .outerRadius(r)
-            .startAngle(-Math.PI / 2)
-            .endAngle(Math.PI / 2)())
-        .attr("transform", `translate(${cx}, ${cyDefThree}) rotate(90)`)
-        .attr("fill", "none")
-        .attr("stroke", "transparent")
-        .attr("stroke-width", 50)
-        .attr("pointer-events", "stroke")
-        .style("cursor", "crosshair");
-
-    let dragStartAngleDef = null;
-    const dragFilterFour = d3.drag()
-        .on("start", function (event) {
-            const [x, y] = d3.pointer(event, this);
-            const distance = Math.sqrt(x * x + y * y);
-            if (Math.abs(distance - r) > 25) {
-                dragStartAngleDef = null;
-                return;
-            }
-            dragStartAngleDef = clampAngle(Math.atan2(y, x));
-        })
-        .on("drag", function (event) {
-            if (dragStartAngleDef === null) return;
-
-            const [x, y] = d3.pointer(event, this);
-            const angle = clampAngle(Math.atan2(y, x));
-            const lower = Math.min(dragStartAngleDef, angle);
-            const upper = Math.max(dragStartAngleDef, angle);
-            const valA = angleScaleThreeDef.invert(lower);
-            const valB = angleScaleThreeDef.invert(upper);
-            const selStart = Math.min(valA, valB);
-            const selEnd = Math.max(valA, valB);
-            const selectedBinsFour = binsFour.filter(b => b.x1 >= selStart && b.x0 <= selEnd);
-
-            updateCallback({ metric: "3P_D", range: [selStart, selEnd] });
-
-            g.select(".density-selected-three-def")
-                .datum(selectedBinsFour)
-                .attr("transform", `rotate(90, ${cx}, ${cyDefThree})`)
-                .attr("d", selectedBinsFour.length ? areaFour : "");
-            g.select(".density-unselected-three-def")
-                .attr("transform", `rotate(90, ${cx}, ${cyDefThree})`)
-                .attr("opacity", selectedBinsFour.length ? 0.18 : 0.6);
-        })
-        .on("end", function () {
-            dragStartAngleDef = null;
-        });
-
-    densityFourOverlay.call(dragFilterFour);
+    renderHalfCourt("#basketball-court-def", {
+        title: "Defense",
+        twoMetric: "2P_D",
+        twoInnerFeet: 20,
+        twoColor: "red",
+        threeMetric: "3P_D",
+        threeColor: "red"
+    });
 }
