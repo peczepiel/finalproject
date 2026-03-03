@@ -12,7 +12,7 @@ function initBracketFilter(data, updateCallback) {
         { value: 3, label: "Sweet 16" },
         { value: 4, label: "Elite 8" },
         { value: 5, label: "Final Four" },
-        { value: 6, label: "Championship Game" },
+        { value: 6, label: "Finals" },
         { value: 7, label: "Champions" }
     ];
 
@@ -126,12 +126,14 @@ function initBracketFilter(data, updateCallback) {
     });
 
     function updateStyles() {
+        const isActiveRound = d => selectedRound !== null && d.value >= selectedRound;
+
         roundGroups.selectAll(".round-segment")
-            .attr("stroke", d => selectedRound === d.value ? "#1f77b4" : "#777")
-            .attr("stroke-width", d => selectedRound === d.value ? 3 : 2);
+            .attr("stroke", d => isActiveRound(d) ? "#1f77b4" : "#777")
+            .attr("stroke-width", d => isActiveRound(d) ? 3 : 2);
 
         roundGroups.select(".round-label")
-            .style("fill", d => selectedRound === d.value ? "#1f77b4" : "#444")
-            .style("font-weight", d => selectedRound === d.value ? "bold" : "normal");
+            .style("fill", d => isActiveRound(d) ? "#1f77b4" : "#444")
+            .style("font-weight", d => isActiveRound(d) ? "bold" : "normal");
     }
 }
