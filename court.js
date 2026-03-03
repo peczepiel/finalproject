@@ -1,5 +1,5 @@
 // court.js
-function initCourtFilter(data, updateCallback) {
+function initCourtFilter(data, updateCallback, initialSelections = {}) {
     const courtWidth = 50;
     const courtLength = 94;
     const halfCourtLength = courtLength / 2;
@@ -31,6 +31,13 @@ function initCourtFilter(data, updateCallback) {
     legend.append("div").attr("class", "legend-item").html(`<span class="legend-swatch" style="background:${palette.twoPD}"></span><span>2P_D</span>`);
     legend.append("div").attr("class", "legend-item").html(`<span class="legend-swatch" style="background:${palette.threePD}"></span><span>3P_D</span>`);
     legend.append("div").attr("class", "legend-item").html(`<span class="legend-swatch" style="background:${palette.selDef}"></span><span>Defense Selected</span>`);
+    const startSelections = (initialSelections && typeof initialSelections === "object") ? initialSelections : {};
+
+    if (!Array.isArray(data) || data.length === 0) {
+        d3.select("#basketball-court-off").html("<p>No data</p>");
+        d3.select("#basketball-court-def").html("<p>No data</p>");
+        return;
+    }
 
     function renderHalfCourt(containerSelector, cfg) {
         const container = d3.select(containerSelector);
@@ -180,6 +187,19 @@ function initCourtFilter(data, updateCallback) {
             .attr("fill", cfg.selectedColor)
             .attr("opacity", 0.85);
 
+        function applyTwoSelection(range) {
+            if (!Array.isArray(range) || range.length !== 2) {
+                twoSelected.datum([]).attr("d", "");
+                twoUnselected.attr("opacity", 0.6);
+                return;
+            }
+            const selStart = Math.min(range[0], range[1]);
+            const selEnd = Math.max(range[0], range[1]);
+            const selectedBins = bins.filter(b => b.x1 >= selStart && b.x0 <= selEnd);
+            twoSelected.datum(selectedBins).attr("d", selectedBins.length ? area : "");
+            twoUnselected.attr("opacity", selectedBins.length ? 0.18 : 0.6);
+        }
+
         const axisG = g.append("g")
             .attr("transform", `translate(0, ${baselineY})`)
             .call(d3.axisBottom(xScale).ticks(6));
@@ -209,13 +229,11 @@ function initCourtFilter(data, updateCallback) {
                 const selEnd = xScale.invert(right);
 
                 updateCallback({ metric: cfg.twoMetric, range: [selStart, selEnd] });
-
-                const selectedBins = bins.filter(b => b.x1 >= selStart && b.x0 <= selEnd);
-                twoSelected.datum(selectedBins).attr("d", selectedBins.length ? area : "");
-                twoUnselected.attr("opacity", selectedBins.length ? 0.18 : 0.6);
+                applyTwoSelection([selStart, selEnd]);
             });
 
         densityOverlay.call(dragFilter);
+        applyTwoSelection(startSelections[cfg.twoMetric]);
 
         // 3P density
         const r = xScaleCourt(cornerThreePointDist - densityArcInsetFeet) - xScaleCourt(0);
@@ -266,6 +284,27 @@ function initCourtFilter(data, updateCallback) {
             .attr("pointer-events", "none")
             .attr("transform", `rotate(270, ${cx}, ${cy})`)
             .attr("opacity", 0.85);
+
+        function applyThreeSelection(range) {
+            if (!Array.isArray(range) || range.length !== 2) {
+                threeSelected.datum([])
+                    .attr("transform", `rotate(270, ${cx}, ${cy})`)
+                    .attr("d", "");
+                threeUnselected
+                    .attr("transform", `rotate(270, ${cx}, ${cy})`)
+                    .attr("opacity", 0.6);
+                return;
+            }
+            const selStart = Math.min(range[0], range[1]);
+            const selEnd = Math.max(range[0], range[1]);
+            const selectedBins = binsThree.filter(b => b.x1 >= selStart && b.x0 <= selEnd);
+            threeSelected.datum(selectedBins)
+                .attr("transform", `rotate(270, ${cx}, ${cy})`)
+                .attr("d", selectedBins.length ? areaThree : "");
+            threeUnselected
+                .attr("transform", `rotate(270, ${cx}, ${cy})`)
+                .attr("opacity", selectedBins.length ? 0.18 : 0.6);
+        }
 
         const threeTicks = angleScale.ticks(5);
         threeTicks.forEach(t => {
@@ -332,23 +371,16 @@ function initCourtFilter(data, updateCallback) {
                 const valB = angleScale.invert(upper);
                 const selStart = Math.min(valA, valB);
                 const selEnd = Math.max(valA, valB);
-                const selectedBins = binsThree.filter(b => b.x1 >= selStart && b.x0 <= selEnd);
 
                 updateCallback({ metric: cfg.threeMetric, range: [selStart, selEnd] });
-
-                threeSelected.datum(selectedBins)
-                    .attr("transform", `rotate(270, ${cx}, ${cy})`)
-                    .attr("d", selectedBins.length ? areaThree : "");
-
-                threeUnselected
-                    .attr("transform", `rotate(270, ${cx}, ${cy})`)
-                    .attr("opacity", selectedBins.length ? 0.18 : 0.6);
+                applyThreeSelection([selStart, selEnd]);
             })
             .on("end", function () {
                 dragStartAngle = null;
             });
 
         overlayThree.call(dragFilterThree);
+        applyThreeSelection(startSelections[cfg.threeMetric]);
     }
 
     renderHalfCourt("#basketball-court-off", {

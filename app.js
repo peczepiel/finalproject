@@ -1,4 +1,5 @@
 let globalData = [];
+let isRefreshingFilters = false;
 
 const activeFilters = {
     year: null,
@@ -8,21 +9,26 @@ const activeFilters = {
     bracket: null
 };
 
-function initAllFilters() {
-    if (typeof initWinPercentFilter === "function") {
-        initWinPercentFilter(globalData, (range) => {
+function initAllFilters(skipKey = null) {
+    isRefreshingFilters = true;
+
+    if (skipKey !== "winPct" && typeof initWinPercentFilter === "function") {
+        initWinPercentFilter(getFilteredData("winPct"), (range) => {
+            if (isRefreshingFilters) return;
             activeFilters.winPct = range;
-            applyAllFilters();
-        });
+            applyAllFilters("winPct");
+        }, activeFilters.winPct);
     }
-    if (typeof initYearFilter === "function") {
-        initYearFilter(globalData, (selectedYear) => {
+    if (skipKey !== "year" && typeof initYearFilter === "function") {
+        initYearFilter(getFilteredData("year"), (selectedYear) => {
+            if (isRefreshingFilters) return;
             activeFilters.year = selectedYear;
-            applyAllFilters();
-        });
+            applyAllFilters("year");
+        }, activeFilters.year);
     }
-    if (typeof initCourtFilter === "function") {
-        initCourtFilter(globalData, (payload) => {
+    if (skipKey !== "court" && typeof initCourtFilter === "function") {
+        initCourtFilter(getFilteredData("court"), (payload) => {
+            if (isRefreshingFilters) return;
             if (payload === null) {
                 activeFilters.court = {};
             } else if (Array.isArray(payload)) {
@@ -30,21 +36,25 @@ function initAllFilters() {
             } else if (payload.metric && Array.isArray(payload.range)) {
                 activeFilters.court[payload.metric] = payload.range;
             }
-            applyAllFilters();
-        });
+            applyAllFilters("court");
+        }, activeFilters.court);
     }
-    if (typeof initSeedFilter === "function") {
-        initSeedFilter(globalData, (range) => {
+    if (skipKey !== "seed" && typeof initSeedFilter === "function") {
+        initSeedFilter(getFilteredData("seed"), (range) => {
+            if (isRefreshingFilters) return;
             activeFilters.seed = range;
-            applyAllFilters();
-        });
+            applyAllFilters("seed");
+        }, activeFilters.seed);
     }
-    if (typeof initBracketFilter === "function") {
-        initBracketFilter(globalData, (selectedRound) => {
+    if (skipKey !== "bracket" && typeof initBracketFilter === "function") {
+        initBracketFilter(getFilteredData("bracket"), (selectedRound) => {
+            if (isRefreshingFilters) return;
             activeFilters.bracket = selectedRound;
-            applyAllFilters();
-        });
+            applyAllFilters("bracket");
+        }, activeFilters.bracket);
     }
+
+    isRefreshingFilters = false;
 }
 
 d3.csv("cleaneddataset.csv").then(data => {
@@ -58,29 +68,28 @@ d3.csv("cleaneddataset.csv").then(data => {
     });
 
     globalData = tournamentTeams;
-    renderBubbles(globalData);
-    initAllFilters();
+    applyAllFilters();
 
 }).catch(error => {
     console.error("Error loading CSV:", error);
 });
 
 
-function applyAllFilters() {
+function getFilteredData(excludedFilter = null) {
     let filtered = globalData;
 
-    if (activeFilters.year !== null) {
+    if (excludedFilter !== "year" && activeFilters.year !== null) {
         const yearSet = Array.isArray(activeFilters.year)
             ? new Set(activeFilters.year.map(Number))
             : new Set([Number(activeFilters.year)]);
         filtered = filtered.filter(d => yearSet.has(parseInt(d.YEAR)));
     }
-    if (activeFilters.winPct !== null) {
+    if (excludedFilter !== "winPct" && activeFilters.winPct !== null) {
         const min = activeFilters.winPct[0];
         const max = activeFilters.winPct[1];
         filtered = filtered.filter(d => d.winPctRaw >= min && d.winPctRaw <= max);
     }
-    if (activeFilters.court && Object.keys(activeFilters.court).length > 0) {
+    if (excludedFilter !== "court" && activeFilters.court && Object.keys(activeFilters.court).length > 0) {
         filtered = filtered.filter(d => {
             return Object.entries(activeFilters.court).every(([metric, range]) => {
                 if (!Array.isArray(range) || range.length !== 2) return true;
@@ -92,13 +101,13 @@ function applyAllFilters() {
         });
     }
 
-    if (activeFilters.seed !== null && activeFilters.seed.length > 0) {
+    if (excludedFilter !== "seed" && activeFilters.seed !== null && activeFilters.seed.length > 0) {
         filtered = filtered.filter(d => {
             const seedNum = parseInt(d.SEED);
             return activeFilters.seed.includes(seedNum);
         });
     }
-    if (activeFilters.bracket !== null) {
+    if (excludedFilter !== "bracket" && activeFilters.bracket !== null) {
         filtered = filtered.filter(d => {
             const finishRound = parseInt(d["Finish Dum"]);
             if (isNaN(finishRound)) return false;
@@ -112,7 +121,13 @@ function applyAllFilters() {
         });
     }
 
+    return filtered;
+}
+
+function applyAllFilters(changedKey = null) {
+    const filtered = getFilteredData();
     renderBubbles(filtered);
+    initAllFilters(changedKey);
 }
 
 function renderBubbles(filteredData) {
@@ -144,6 +159,5 @@ document.getElementById("clear-btn").addEventListener("click", () => {
     activeFilters.seed = null;
     activeFilters.bracket = null;
 
-    initAllFilters();
-    renderBubbles(globalData);
+    applyAllFilters();
 });

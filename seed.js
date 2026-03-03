@@ -1,4 +1,4 @@
-function initSeedFilter(data, updateCallback) {
+function initSeedFilter(data, updateCallback, initialSelection = null) {
     const container = d3.select("#seeding-container");
     container.html("");
 
@@ -11,7 +11,10 @@ function initSeedFilter(data, updateCallback) {
         .attr("height", height);
 
     const seeds = d3.range(1, 17);
-    let selectedSeeds = new Set(); 
+    const initialSeeds = Array.isArray(initialSelection)
+        ? initialSelection.map(Number)
+        : (initialSelection === null ? [] : [Number(initialSelection)]);
+    let selectedSeeds = new Set(initialSeeds.filter(s => !isNaN(s)));
 
     const cols = 2;
     const rows = 8;
@@ -88,4 +91,6 @@ function initSeedFilter(data, updateCallback) {
             .style("fill", d => selectedSeeds.has(d) ? "#fff" : "#4b5563")
             .style("font-weight", d => selectedSeeds.has(d) ? "bold" : "normal");
     }
+
+    updateStyles();
 }

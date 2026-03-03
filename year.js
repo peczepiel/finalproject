@@ -1,7 +1,12 @@
 // year.js
-function initYearFilter(data, updateCallback) {
+function initYearFilter(data, updateCallback, initialSelection = null) {
     const container = d3.select("#year-selector");
-    container.html(""); 
+    container.html("");
+
+    if (!Array.isArray(data) || data.length === 0) {
+        container.append("p").text("No data");
+        return;
+    }
 
     const width = container.node().getBoundingClientRect().width || 300;
     const height = container.node().getBoundingClientRect().height || 100;
@@ -29,8 +34,10 @@ function initYearFilter(data, updateCallback) {
         .attr("stroke-width", 4)
         .attr("stroke-linecap", "round");
 
-    // NEW: Use a Set to track multiple years
-    let selectedYears = new Set();
+    const initialYears = Array.isArray(initialSelection)
+        ? initialSelection.map(Number)
+        : (initialSelection === null ? [] : [Number(initialSelection)]);
+    let selectedYears = new Set(initialYears.filter(y => !isNaN(y) && y !== 2020));
 
     const yearNodes = svg.selectAll(".year-node")
         .data(years)
@@ -103,4 +110,6 @@ function initYearFilter(data, updateCallback) {
             .style("font-weight", d => selectedYears.has(d) ? "bold" : "normal")
             .style("fill", d => selectedYears.has(d) ? "#1f2937" : "#6b7280");
     }
+
+    updateStyles();
 }

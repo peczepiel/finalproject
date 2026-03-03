@@ -1,8 +1,13 @@
 // winPercentFilter.js
 
-function initWinPercentFilter(data, updateCallback) {
+function initWinPercentFilter(data, updateCallback, initialRange = null) {
     const container = d3.select("#win-graph-container");
     container.html("");
+
+    if (!Array.isArray(data) || data.length === 0) {
+        container.append("p").text("No data");
+        return;
+    }
 
     const width = container.node().getBoundingClientRect().width || 300;
     // Reverted back to strictly using the container's exact height so it never overflows
@@ -83,9 +88,20 @@ function initWinPercentFilter(data, updateCallback) {
         .extent([[margin.left, margin.top], [width - margin.right, height - margin.bottom]])
         .on("brush end", brushed);
 
-    svg.append("g")
+    const brushG = svg.append("g")
         .attr("class", "brush")
         .call(brush);
+
+    if (Array.isArray(initialRange) && initialRange.length === 2) {
+        const domain = x.domain();
+        const rawMin = Math.min(initialRange[0], initialRange[1]);
+        const rawMax = Math.max(initialRange[0], initialRange[1]);
+        const minVal = Math.max(domain[0], rawMin);
+        const maxVal = Math.min(domain[1], rawMax);
+        if (isFinite(minVal) && isFinite(maxVal) && maxVal > minVal) {
+            brushG.call(brush.move, [x(minVal), x(maxVal)]);
+        }
+    }
 
     function brushed(event) {
         if (!event.selection) {

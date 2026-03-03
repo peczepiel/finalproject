@@ -1,4 +1,4 @@
-function initBracketFilter(data, updateCallback) {
+function initBracketFilter(data, updateCallback, initialSelection = null) {
     const container = d3.select("#bracket-container");
     container.html("");
 
@@ -28,7 +28,7 @@ function initBracketFilter(data, updateCallback) {
     const branchGap = Math.max(4, Math.min(18, yStep * 0.85));
     const baseY = margin.top;
 
-    let selectedRound = null;
+    let selectedRound = initialSelection === null ? null : Number(initialSelection);
 
     const roundGroups = svg.selectAll(".bracket-round")
         .data(rounds)
@@ -136,4 +136,6 @@ function initBracketFilter(data, updateCallback) {
             .style("fill", d => isActiveRound(d) ? "#1f77b4" : "#444")
             .style("font-weight", d => isActiveRound(d) ? "bold" : "normal");
     }
+
+    updateStyles();
 }
