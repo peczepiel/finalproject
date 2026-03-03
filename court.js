@@ -354,7 +354,7 @@ function initCourtFilter(data, updateCallback) {
     renderHalfCourt("#basketball-court-off", {
         title: "Offense",
         twoMetric: "2P_O",
-        twoInnerFeet: 15,
+        twoInnerFeet: 20,
         twoColor: palette.twoPO,
         threeMetric: "3P_O",
         threeColor: palette.threePO,

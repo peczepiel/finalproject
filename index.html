@@ -52,6 +52,73 @@
             font-size: 16px;
             text-align: center;
         }
+        .court-header {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .court-header h3 {
+            margin: 0;
+        }
+
+        .stat-help {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 1px solid #97a6ba;
+            background: #f7f9fc;
+            color: #2f3b4b;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1;
+            cursor: help;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .stat-help:focus {
+            outline: 2px solid #6ea8ff;
+            outline-offset: 1px;
+        }
+
+        .stat-help-tooltip {
+            position: absolute;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 230px;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #c4cdd8;
+            background: #ffffff;
+            box-shadow: 0 8px 18px rgba(24, 39, 75, 0.15);
+            font-size: 12px;
+            line-height: 1.4;
+            color: #243447;
+            z-index: 30;
+            display: none;
+            text-align: left;
+        }
+
+        .stat-help-tooltip p {
+            margin: 0 0 4px 0;
+            font-weight: 700;
+        }
+
+        .stat-help-tooltip .tip-line {
+            margin: 2px 0;
+        }
+
+        .stat-help:hover + .stat-help-tooltip,
+        .stat-help:focus + .stat-help-tooltip {
+            display: block;
+        }
 
         #bottom-half {
             min-height: 40%;
@@ -190,7 +257,17 @@
         </div>
 
         <div id="filter-court" class="filter-container">
-            <h3>Court Stats</h3>
+            <div class="court-header">
+                <h3>Court Stats</h3>
+                <button type="button" class="stat-help" aria-label="Court stat definitions">?</button>
+                <div class="stat-help-tooltip">
+                    <p>Stat Definitions</p>
+                    <div class="tip-line"><strong>2P_O:</strong> The % of 2-point shots made by team.</div>
+                    <div class="tip-line"><strong>3P_O:</strong> The % of 3-point shots made by team.</div>
+                    <div class="tip-line"><strong>2P_D:</strong> The % of 2-point shots made by opponent.</div>
+                    <div class="tip-line"><strong>3P_D:</strong> The % of 3-point shots made by opponent.</div>
+                </div>
+            </div>
             <div id="court-layout">
                 <div id="basketball-courts">
                     <div id="basketball-court-off" class="court-box"></div>
