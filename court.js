@@ -13,6 +13,24 @@ function initCourtFilter(data, updateCallback) {
     const hoopBackboardLength = 6;
     const hoopBaselineDist = 4;
     const densityArcInsetFeet = 0;
+    const palette = {
+        twoPO: "#145a32",
+        threePO: "#7dce82",
+        selOff: "#0b3d20",
+        twoPD: "#7b1113",
+        threePD: "#f28b82",
+        selDef: "#4a0607"
+    };
+
+    const legend = d3.select("#court-legend");
+    legend.html("");
+    legend.append("h4").text("Court Legend");
+    legend.append("div").attr("class", "legend-item").html(`<span class="legend-swatch" style="background:${palette.twoPO}"></span><span>2P_O</span>`);
+    legend.append("div").attr("class", "legend-item").html(`<span class="legend-swatch" style="background:${palette.threePO}"></span><span>3P_O</span>`);
+    legend.append("div").attr("class", "legend-item").html(`<span class="legend-swatch" style="background:${palette.selOff}"></span><span>Offense Selected</span>`);
+    legend.append("div").attr("class", "legend-item").html(`<span class="legend-swatch" style="background:${palette.twoPD}"></span><span>2P_D</span>`);
+    legend.append("div").attr("class", "legend-item").html(`<span class="legend-swatch" style="background:${palette.threePD}"></span><span>3P_D</span>`);
+    legend.append("div").attr("class", "legend-item").html(`<span class="legend-swatch" style="background:${palette.selDef}"></span><span>Defense Selected</span>`);
 
     function renderHalfCourt(containerSelector, cfg) {
         const container = d3.select(containerSelector);
@@ -22,14 +40,14 @@ function initCourtFilter(data, updateCallback) {
         const width = bounds.width > 0 ? bounds.width : 620;
         const height = bounds.height > 0 ? bounds.height : 480;
 
-        const labelBand = Math.max(36, Math.min(52, height * 0.12));
-        const padX = Math.max(10, Math.min(18, width * 0.03));
-        const padBottom = Math.max(8, Math.min(14, height * 0.03));
+        const labelBand = Math.max(38, Math.min(54, height * 0.12));
+        const padX = Math.max(6, Math.min(12, width * 0.02));
+        const padBottom = Math.max(18, Math.min(28, height * 0.06));
 
         const usableW = width - (2 * padX);
         const usableH = height - labelBand - padBottom;
         const feetToPx = Math.min(usableW / courtWidth, usableH / halfCourtLength);
-        const drawW = courtWidth * feetToPx;
+        const drawW = Math.min(usableW, courtWidth * feetToPx * 1.08);
         const drawH = halfCourtLength * feetToPx;
         const drawX0 = (width - drawW) / 2;
         const drawY0 = labelBand + ((usableH - drawH) / 2);
@@ -38,7 +56,7 @@ function initCourtFilter(data, updateCallback) {
         const metricLabelSize = Math.max(14, Math.min(20, feetToPx * 1.2));
         const arcTickSize = Math.max(11, Math.min(15, feetToPx * 0.95));
         const arcLabelSize = Math.max(14, Math.min(20, feetToPx * 1.25));
-        const radialOut = Math.max(44, Math.min(82, drawH * 0.22));
+        const radialOutBase = Math.max(34, Math.min(68, drawH * 0.18));
 
         const xScaleCourt = d3.scaleLinear().domain([0, courtWidth]).range([drawX0, drawX0 + drawW]);
         const yScaleHalf = d3.scaleLinear().domain([0, halfCourtLength]).range([drawY0, drawY0 + drawH]);
@@ -161,7 +179,7 @@ function initCourtFilter(data, updateCallback) {
         const twoSelected = g.append("path")
             .datum([])
             .attr("d", "")
-            .attr("fill", "orange")
+            .attr("fill", cfg.selectedColor)
             .attr("opacity", 0.85);
 
         const axisG = g.append("g")
@@ -170,14 +188,6 @@ function initCourtFilter(data, updateCallback) {
 
         axisG.selectAll("text").attr("font-size", `${axisTickSize}px`).attr("font-weight", "600");
         axisG.selectAll("line").attr("stroke-width", 1.5);
-        axisG.append("text")
-            .attr("x", (densityLeft + densityRight) / 2)
-            .attr("y", 38)
-            .attr("fill", "#000")
-            .attr("font-size", `${metricLabelSize}px`)
-            .attr("font-weight", "bold")
-            .attr("text-anchor", "middle")
-            .text(cfg.twoMetric);
 
         const densityOverlay = g.append("rect")
             .attr("x", densityLeft)
@@ -213,6 +223,11 @@ function initCourtFilter(data, updateCallback) {
         const r = xScaleCourt(cornerThreePointDist - densityArcInsetFeet) - xScaleCourt(0);
         const cx = xScaleCourt(courtWidth / 2);
         const cy = yFromBaseline(cornerThreeLength);
+        const arcLabelOffset = Math.max(14, Math.min(20, drawW * 0.018));
+        const radialOut = Math.max(
+            24,
+            Math.min(radialOutBase, (drawW / 2) - r - (arcLabelOffset + 20))
+        );
 
         const threeData = data.map(d => +d[cfg.threeMetric]).filter(d => !isNaN(d));
         const angleScale = d3.scaleLinear().domain(d3.extent(threeData)).range([-Math.PI / 2, Math.PI / 2]);
@@ -249,7 +264,7 @@ function initCourtFilter(data, updateCallback) {
         const threeSelected = g.append("path")
             .datum([])
             .attr("d", "")
-            .attr("fill", "orange")
+            .attr("fill", cfg.selectedColor)
             .attr("pointer-events", "none")
             .attr("transform", `rotate(270, ${cx}, ${cy})`)
             .attr("opacity", 0.85);
@@ -257,14 +272,14 @@ function initCourtFilter(data, updateCallback) {
         const threeTicks = angleScale.ticks(5);
         threeTicks.forEach(t => {
             const theta = angleScale(t);
-            const tickInner = r - 8;
-            const tickOuter = r + 12;
+            const tickInner = r - 6;
+            const tickOuter = r + 10;
             const x1 = cx + tickInner * Math.cos(theta);
             const y1 = cy + tickInner * Math.sin(theta);
             const x2 = cx + tickOuter * Math.cos(theta);
             const y2 = cy + tickOuter * Math.sin(theta);
-            const lx = cx + (r + 22) * Math.cos(theta);
-            const ly = cy + (r + 22) * Math.sin(theta);
+            const lx = cx + (r + arcLabelOffset) * Math.cos(theta);
+            const ly = cy + (r + arcLabelOffset) * Math.sin(theta);
 
             g.append("line")
                 .attr("x1", x1)
@@ -287,13 +302,13 @@ function initCourtFilter(data, updateCallback) {
 
         g.append("text")
             .attr("x", cx)
-            .attr("y", cy - (r + 34))
+            .attr("y", cy - (r + arcLabelOffset + 16))
             .attr("text-anchor", "middle")
             .attr("font-size", `${arcLabelSize}px`)
             .attr("font-weight", "bold")
             .attr("fill", "#000")
-            .text(cfg.threeMetric)
-            .attr("transform", `rotate(270, ${cx}, ${cy}) rotate(-270, ${cx}, ${cy - (r + 34)})`);
+            .text("")
+            .attr("transform", `rotate(270, ${cx}, ${cy}) rotate(-270, ${cx}, ${cy - (r + arcLabelOffset + 16)})`);
 
         const overlayThree = g.append("path")
             .attr("d", d3.arc().innerRadius(r).outerRadius(r).startAngle(-Math.PI / 2).endAngle(Math.PI / 2)())
@@ -352,17 +367,19 @@ function initCourtFilter(data, updateCallback) {
         title: "Offense",
         twoMetric: "2P_O",
         twoInnerFeet: 15,
-        twoColor: "steelblue",
+        twoColor: palette.twoPO,
         threeMetric: "3P_O",
-        threeColor: "green"
+        threeColor: palette.threePO,
+        selectedColor: palette.selOff
     });
 
     renderHalfCourt("#basketball-court-def", {
         title: "Defense",
         twoMetric: "2P_D",
         twoInnerFeet: 20,
-        twoColor: "red",
+        twoColor: palette.twoPD,
         threeMetric: "3P_D",
-        threeColor: "red"
+        threeColor: palette.threePD,
+        selectedColor: palette.selDef
     });
 }

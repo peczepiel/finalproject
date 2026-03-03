@@ -99,8 +99,17 @@
             height: 100%;
         }
 
-        #basketball-courts {
+        #court-layout {
             flex: 1;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: 1fr 140px;
+            gap: 8px;
+            min-height: 0;
+        }
+
+        #basketball-courts {
             width: 100%;
             height: 100%;
             display: grid;
@@ -122,6 +131,41 @@
         .court-box svg {
             width: 100%;
             height: 100%;
+        }
+
+        #court-legend {
+            border: 1px solid #c4cdd8;
+            border-radius: 8px;
+            background: #ffffff;
+            padding: 10px;
+            box-sizing: border-box;
+            font-size: 13px;
+            color: #243447;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        #court-legend h4 {
+            margin: 0;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: #4a5568;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-swatch {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            flex-shrink: 0;
         }
 
         /* duplicate #bottom-half rule removed */
@@ -147,9 +191,12 @@
 
         <div id="filter-court" class="filter-container">
             <h3>Court Stats</h3>
-            <div id="basketball-courts">
-                <div id="basketball-court-off" class="court-box"></div>
-                <div id="basketball-court-def" class="court-box"></div>
+            <div id="court-layout">
+                <div id="basketball-courts">
+                    <div id="basketball-court-off" class="court-box"></div>
+                    <div id="basketball-court-def" class="court-box"></div>
+                </div>
+                <div id="court-legend"></div>
             </div>
         </div>
         <div id="filter-seed" class="filter-container">
