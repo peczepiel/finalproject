@@ -4,7 +4,8 @@ const activeFilters = {
     year: null,
     winPct: null,
     court: {},
-    seed: null 
+    seed: null,
+    bracket: null
 };
 
 function initAllFilters() {
@@ -35,6 +36,12 @@ function initAllFilters() {
     if (typeof initSeedFilter === "function") {
         initSeedFilter(globalData, (range) => {
             activeFilters.seed = range;
+            applyAllFilters();
+        });
+    }
+    if (typeof initBracketFilter === "function") {
+        initBracketFilter(globalData, (selectedRound) => {
+            activeFilters.bracket = selectedRound;
             applyAllFilters();
         });
     }
@@ -119,6 +126,7 @@ document.getElementById("clear-btn").addEventListener("click", () => {
     activeFilters.winPct = null;
     activeFilters.court = {};
     activeFilters.seed = null;
+    activeFilters.bracket = null;
 
     initAllFilters();
     renderBubbles(globalData);
