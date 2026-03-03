@@ -13,10 +13,6 @@ function renderBubbles(filteredData) {
     const width = container.node().getBoundingClientRect().width;
     const height = container.node().getBoundingClientRect().height;
 
-    const svg = container.append("svg")
-        .attr("width", width)
-        .attr("height", height);
-
     let tooltip = d3.select("body").select(".bubble-tooltip");
     if (tooltip.empty()) {
         tooltip = d3.select("body").append("div")
@@ -33,14 +29,13 @@ function renderBubbles(filteredData) {
             .style("box-shadow", "0 4px 6px rgba(0,0,0,0.1)");
     }
 
-    const margin = 20; //change if needed
+    const margin = 20; 
     const safeWidth = width - (margin * 2);
     const safeHeight = height - (margin * 2);
     const safeArea = safeWidth * safeHeight;
     
     const maxAreaPerNode = safeArea / filteredData.length;
     
-    //this is physics of bubbles, might need to edit
     const maxPossibleRadius = Math.min(100, safeHeight / 2, safeWidth / 2);
     const baseRadius = Math.max(15, Math.min(maxPossibleRadius, Math.sqrt(maxAreaPerNode / Math.PI) * 0.75));
 
@@ -49,9 +44,18 @@ function renderBubbles(filteredData) {
         radius: baseRadius
     }));
 
+    const totalBubbleArea = nodes.length * Math.PI * baseRadius * baseRadius;
+    const packingDensity = 0.7; // lower = more spacing
+    const requiredArea = totalBubbleArea / packingDensity;
+    const virtualHeight = Math.max(height, Math.ceil(requiredArea / width) + margin * 2);
+
+    const svg = container.append("svg")
+        .attr("width", width)
+        .attr("height", virtualHeight);
+
     const simulation = d3.forceSimulation(nodes)
         .force("x", d3.forceX(width / 2).strength(0.05))
-        .force("y", d3.forceY(height / 2).strength(0.05))
+        .force("y", d3.forceY(virtualHeight / 2).strength(0.05))
         .force("collide", d3.forceCollide().radius(d => d.radius + 1).iterations(4)); 
 
     const nodeG = svg.selectAll(".node")
@@ -67,11 +71,11 @@ function renderBubbles(filteredData) {
 
     nodeG.append("circle")
         .attr("r", d => d.radius)
-        .attr("fill", "#3498db")
-        .attr("stroke", "#2980b9")
+        .attr("fill", "#FF8C00")
+        .attr("stroke", "black")
         .attr("stroke-width", 2)
         .on("mouseover", function(event, d) {
-            d3.select(this).attr("fill", "#e67e22").attr("stroke", "#d35400");
+            d3.select(this).attr("fill", "#FFA500");
             tooltip.transition().duration(200).style("opacity", 1);
             tooltip.html(`
                 <strong>${d.TEAM}</strong> (${d.YEAR})<br/>
@@ -89,9 +93,26 @@ function renderBubbles(filteredData) {
                    .style("top", (event.pageY - 30) + "px");
         })
         .on("mouseout", function(event, d) {
-            d3.select(this).attr("fill", "#3498db").attr("stroke", "#2980b9");
+            d3.select(this).attr("fill", "#FF8C00");
             tooltip.transition().duration(500).style("opacity", 0);
         });
+
+    nodeG.append("path")
+        .attr("d", d => {
+            const r = d.radius;
+            const yOffset = r * 0.6; 
+            const xOffset = r * 0.8; 
+            
+            return `
+                M -${r} 0 Q 0 ${r * 0.35} ${r} 0
+                M -${xOffset} -${yOffset} Q 0 -${yOffset - r * 0.35} ${xOffset} -${yOffset}
+                M -${xOffset} ${yOffset} Q 0 ${yOffset - r * 0.35} ${xOffset} ${yOffset}
+            `;
+        })
+        .attr("stroke", "black")
+        .attr("stroke-width", d => Math.max(1, d.radius * 0.05))
+        .attr("fill", "none")
+        .style("pointer-events", "none");
 
     nodeG.append("text")
         .attr("text-anchor", "middle")
@@ -100,6 +121,7 @@ function renderBubbles(filteredData) {
         .style("font-family", "Arial, sans-serif")
         .style("font-size", d => Math.max(9, Math.min(22, d.radius / 2.5)) + "px") 
         .style("font-weight", "bold")
+        .style("text-shadow", "1px 1px 3px rgba(0,0,0,0.9), -1px -1px 3px rgba(0,0,0,0.9)")
         .style("pointer-events", "none")
         .each(function(d) {
             const text = d3.select(this);
@@ -130,7 +152,7 @@ function renderBubbles(filteredData) {
     simulation.on("tick", () => {
         nodeG.attr("transform", d => {
             d.x = Math.max(margin + d.radius, Math.min(width - margin - d.radius, d.x));
-            d.y = Math.max(margin + d.radius, Math.min(height - margin - d.radius, d.y));
+            d.y = Math.max(margin + d.radius, Math.min(virtualHeight - margin - d.radius, d.y));
             return `translate(${d.x},${d.y})`;
         });
     });

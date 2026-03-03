@@ -1,10 +1,15 @@
+// winPercentFilter.js
+
 function initWinPercentFilter(data, updateCallback) {
     const container = d3.select("#win-graph-container");
     container.html("");
 
     const width = container.node().getBoundingClientRect().width || 300;
+    // Reverted back to strictly using the container's exact height so it never overflows
     const height = container.node().getBoundingClientRect().height || 150;
-    const margin = {top: 10, right: 15, bottom: 25, left: 15};
+    
+    // Tightened the margins so the numbers fit, but the graph stays as large as possible
+    const margin = {top: 0, right: 30, bottom: 20, left: 30};
 
     const svg = container.append("svg")
         .attr("width", width)
@@ -13,7 +18,7 @@ function initWinPercentFilter(data, updateCallback) {
     const minWinPct = Math.floor(d3.min(data, d => d.winPctRaw));
 
     const x = d3.scaleLinear()
-        .domain([minWinPct, 100]) //use min win%
+        .domain([minWinPct, 100])
         .range([margin.left, width - margin.right]);
 
     const histogram = d3.histogram()
@@ -53,9 +58,26 @@ function initWinPercentFilter(data, updateCallback) {
         .attr("stroke-width", 2)
         .attr("d", line);
 
+    // X Axis (Bottom) - Kept at 6 ticks to prevent squishing
     svg.append("g")
         .attr("transform", `translate(0,${height - margin.bottom})`)
-        .call(d3.axisBottom(x).ticks(5).tickFormat(d => d + "%"));
+        .call(d3.axisBottom(x).ticks(6).tickFormat(d => d + "%"))
+        .selectAll("text")
+        .style("font-size", "11px");
+
+    // Y Axis (Left side) - Kept at 3 ticks to prevent vertical squishing
+    svg.append("g")
+        .attr("transform", `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y).ticks(3).tickFormat(d3.format("d")))
+        .selectAll("text")
+        .style("font-size", "11px");
+
+    // Y Axis (Right side)
+    svg.append("g")
+        .attr("transform", `translate(${width - margin.right},0)`)
+        .call(d3.axisRight(y).ticks(3).tickFormat(d3.format("d")))
+        .selectAll("text")
+        .style("font-size", "11px");
 
     const brush = d3.brushX()
         .extent([[margin.left, margin.top], [width - margin.right, height - margin.bottom]])
