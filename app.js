@@ -69,11 +69,11 @@ d3.csv("cleaneddataset.csv").then(data => {
 function applyAllFilters() {
     let filtered = globalData;
 
-    if (activeFilters.year !== null && activeFilters.year.length > 0) {
-        filtered = filtered.filter(d => {
-            const yearNum = parseInt(d.YEAR);
-            return activeFilters.year.includes(yearNum);
-        });
+    if (activeFilters.year !== null) {
+        const yearSet = Array.isArray(activeFilters.year)
+            ? new Set(activeFilters.year.map(Number))
+            : new Set([Number(activeFilters.year)]);
+        filtered = filtered.filter(d => yearSet.has(parseInt(d.YEAR)));
     }
     if (activeFilters.winPct !== null) {
         const min = activeFilters.winPct[0];
