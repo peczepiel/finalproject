@@ -64,7 +64,7 @@ What visualizations did you use to initially look at your data? What insights di
 - Upon going to class on Tuesday (March 3rd), we decided to change the court graphic to be two seperate vertical courts instead of one connected horizontal court. This is what the initial first draft of the coded site looked like: 
 ![drawing4](img/firstdraftss.png)
 - We also created a drawing of what the new layout with the two seperated courts would look like:
-DRAWING OF SEPERATE COURTS
+![drawing4](img/IMG_1863.jpg)
 - Our very final implementation of the site looks like this:
 FINAL SCREENSHOT
 - Perceptual and Design Principles learned in the Course: ???????
