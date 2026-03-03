@@ -1,3 +1,4 @@
+// year.js
 function initYearFilter(data, updateCallback) {
     const container = d3.select("#year-selector");
     container.html(""); 
@@ -28,7 +29,8 @@ function initYearFilter(data, updateCallback) {
         .attr("stroke-width", 4)
         .attr("stroke-linecap", "round");
 
-    let selectedYear = null;
+    // NEW: Use a Set to track multiple years
+    let selectedYears = new Set();
 
     const yearNodes = svg.selectAll(".year-node")
         .data(years)
@@ -40,14 +42,21 @@ function initYearFilter(data, updateCallback) {
         .on("click", function(event, d) {
             if (d === 2020) return;
             
-            if (selectedYear === d) {
-                selectedYear = null; 
+            // NEW: Toggle the year in the set
+            if (selectedYears.has(d)) {
+                selectedYears.delete(d);
+            } else {
+                selectedYears.add(d);
+            }
+            
+            updateStyles();
+            
+            // NEW: Send the array of years back to the app (or null if empty)
+            if (selectedYears.size === 0) {
                 updateCallback(null);
             } else {
-                selectedYear = d;
-                updateCallback(d);
+                updateCallback(Array.from(selectedYears));
             }
-            updateStyles();
         });
 
     yearNodes.append("circle")
@@ -77,7 +86,7 @@ function initYearFilter(data, updateCallback) {
         .text("COVID");
 
     yearNodes.on("mouseover", function(event, d) {
-        if (d !== 2020 && selectedYear !== d) {
+        if (d !== 2020 && !selectedYears.has(d)) { // Updated condition
             d3.select(this).select("circle").attr("fill", "#eaf2f8");
         }
     }).on("mouseout", function(event, d) {
@@ -87,11 +96,11 @@ function initYearFilter(data, updateCallback) {
     function updateStyles() {
         yearNodes.filter(d => d !== 2020).select("circle")
             .transition().duration(200)
-            .attr("fill", d => d === selectedYear ? "#3498db" : "#fff")
-            .attr("r", d => d === selectedYear ? 10 : 8);
+            .attr("fill", d => selectedYears.has(d) ? "#3498db" : "#fff")
+            .attr("r", d => selectedYears.has(d) ? 10 : 8);
         
         yearNodes.filter(d => d !== 2020).select("text")
-            .style("font-weight", d => d === selectedYear ? "bold" : "normal")
-            .style("fill", d => d === selectedYear ? "#1f2937" : "#6b7280");
+            .style("font-weight", d => selectedYears.has(d) ? "bold" : "normal")
+            .style("fill", d => selectedYears.has(d) ? "#1f2937" : "#6b7280");
     }
 }
