@@ -61,6 +61,12 @@ What visualizations did you use to initially look at your data? What insights di
 - After creating our initial ideas, we looked at both and decided what we wanted our final site to look like and what features we wanted to include. Our drawing for our final site looked like this:
 ![drawing3](img/teammeetingdraft.jpeg)
 - While we had lots of possible ideas for filtering techniques, we decided to scale down to the ones we as a team deemed as essential to creating a good interactive visualization. These ended up being the five filters that we still have in the final version of our site. The only way we deviated from our proposal was scaling down a little bit due to time constraints.
+- Upon going to class on Tuesday (March 3rd), we decided to change the court graphic to be two seperate vertical courts instead of one connected horizontal court. This is what the initial first draft of the coded site looked like: 
+![drawing4](img/firstdraftss.png)
+- We also created a drawing of what the new layout with the two seperated courts would look like:
+DRAWING OF SEPERATE COURTS
+- Our very final implementation of the site looks like this:
+FINAL SCREENSHOT
 - Perceptual and Design Principles learned in the Course: ???????
 
 
@@ -81,6 +87,7 @@ What did you learn about the data by using your visualizations? How did you answ
 # Outside Libraries and References:
 
 ## Libraries:
+- [d3.js](https://d3js.org/)
 
 ## References:
 - [barttorvik.com](https://barttorvik.com/#)
