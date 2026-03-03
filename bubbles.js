@@ -29,14 +29,13 @@ function renderBubbles(filteredData) {
             .style("box-shadow", "0 4px 6px rgba(0,0,0,0.1)");
     }
 
-    const margin = 20; //change if needed
+    const margin = 20; 
     const safeWidth = width - (margin * 2);
     const safeHeight = height - (margin * 2);
     const safeArea = safeWidth * safeHeight;
     
     const maxAreaPerNode = safeArea / filteredData.length;
     
-    //this is physics of bubbles, might need to edit
     const maxPossibleRadius = Math.min(100, safeHeight / 2, safeWidth / 2);
     const baseRadius = Math.max(15, Math.min(maxPossibleRadius, Math.sqrt(maxAreaPerNode / Math.PI) * 0.75));
 
@@ -72,11 +71,11 @@ function renderBubbles(filteredData) {
 
     nodeG.append("circle")
         .attr("r", d => d.radius)
-        .attr("fill", "#3498db")
-        .attr("stroke", "#2980b9")
+        .attr("fill", "#FF8C00")
+        .attr("stroke", "black")
         .attr("stroke-width", 2)
         .on("mouseover", function(event, d) {
-            d3.select(this).attr("fill", "#e67e22").attr("stroke", "#d35400");
+            d3.select(this).attr("fill", "#FFA500");
             tooltip.transition().duration(200).style("opacity", 1);
             tooltip.html(`
                 <strong>${d.TEAM}</strong> (${d.YEAR})<br/>
@@ -94,9 +93,26 @@ function renderBubbles(filteredData) {
                    .style("top", (event.pageY - 30) + "px");
         })
         .on("mouseout", function(event, d) {
-            d3.select(this).attr("fill", "#3498db").attr("stroke", "#2980b9");
+            d3.select(this).attr("fill", "#FF8C00");
             tooltip.transition().duration(500).style("opacity", 0);
         });
+
+    nodeG.append("path")
+        .attr("d", d => {
+            const r = d.radius;
+            const yOffset = r * 0.6; 
+            const xOffset = r * 0.8; 
+            
+            return `
+                M -${r} 0 Q 0 ${r * 0.35} ${r} 0
+                M -${xOffset} -${yOffset} Q 0 -${yOffset - r * 0.35} ${xOffset} -${yOffset}
+                M -${xOffset} ${yOffset} Q 0 ${yOffset - r * 0.35} ${xOffset} ${yOffset}
+            `;
+        })
+        .attr("stroke", "black")
+        .attr("stroke-width", d => Math.max(1, d.radius * 0.05))
+        .attr("fill", "none")
+        .style("pointer-events", "none");
 
     nodeG.append("text")
         .attr("text-anchor", "middle")
@@ -105,6 +121,7 @@ function renderBubbles(filteredData) {
         .style("font-family", "Arial, sans-serif")
         .style("font-size", d => Math.max(9, Math.min(22, d.radius / 2.5)) + "px") 
         .style("font-weight", "bold")
+        .style("text-shadow", "1px 1px 3px rgba(0,0,0,0.9), -1px -1px 3px rgba(0,0,0,0.9)")
         .style("pointer-events", "none")
         .each(function(d) {
             const text = d3.select(this);
