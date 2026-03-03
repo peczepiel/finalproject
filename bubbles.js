@@ -95,20 +95,36 @@ function renderBubbles(filteredData) {
 
     nodeG.append("text")
         .attr("text-anchor", "middle")
-        .attr("dy", "0.3em")
+        .attr("dy", d => d.radius > 35 ? "-0.15em" : "0.3em")
         .style("fill", "white")
         .style("font-family", "Arial, sans-serif")
         .style("font-size", d => Math.max(9, Math.min(22, d.radius / 2.5)) + "px") 
         .style("font-weight", "bold")
-        .style("pointer-events", "none") 
-        .text(d => {
-            if (d.radius > 35) return d.TEAM;
-            
-            const words = d.TEAM.split(" ");
-            if (words.length > 1) {
-                return words.map(w => w[0]).join("").substring(0, 3).toUpperCase();
+        .style("pointer-events", "none")
+        .each(function(d) {
+            const text = d3.select(this);
+            text.text("");
+
+            if (d.radius > 35) {
+                text.append("tspan")
+                    .attr("x", 0)
+                    .text(d.TEAM);
+
+                text.append("tspan")
+                    .attr("x", 0)
+                    .attr("dy", "1.2em")
+                    .style("font-size", "0.65em")
+                    .style("font-weight", "normal")
+                    .text(d.YEAR);
+                return;
             }
-            return d.TEAM.substring(0, 3).toUpperCase();
+
+            const words = d.TEAM.split(" ");
+            const shortName = words.length > 1
+                ? words.map(w => w[0]).join("").substring(0, 3).toUpperCase()
+                : d.TEAM.substring(0, 3).toUpperCase();
+
+            text.text(shortName);
         });
 
     simulation.on("tick", () => {
