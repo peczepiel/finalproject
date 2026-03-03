@@ -53,9 +53,7 @@ function initCourtFilter(data, updateCallback) {
         const drawY0 = labelBand + ((usableH - drawH) / 2);
         const titleSize = Math.max(22, Math.min(34, feetToPx * 2.1));
         const axisTickSize = Math.max(11, Math.min(14, feetToPx * 0.85));
-        const metricLabelSize = Math.max(14, Math.min(20, feetToPx * 1.2));
         const arcTickSize = Math.max(11, Math.min(15, feetToPx * 0.95));
-        const arcLabelSize = Math.max(14, Math.min(20, feetToPx * 1.25));
         const radialOutBase = Math.max(34, Math.min(68, drawH * 0.18));
 
         const xScaleCourt = d3.scaleLinear().domain([0, courtWidth]).range([drawX0, drawX0 + drawW]);
@@ -225,7 +223,7 @@ function initCourtFilter(data, updateCallback) {
         const cy = yFromBaseline(cornerThreeLength);
         const arcLabelOffset = Math.max(14, Math.min(20, drawW * 0.018));
         const radialOut = Math.max(
-            24,
+            50,
             Math.min(radialOutBase, (drawW / 2) - r - (arcLabelOffset + 20))
         );
 
@@ -299,16 +297,6 @@ function initCourtFilter(data, updateCallback) {
                 .text(d3.format(".1f")(t))
                 .attr("transform", `rotate(270, ${cx}, ${cy}) rotate(-270, ${lx}, ${ly})`);
         });
-
-        g.append("text")
-            .attr("x", cx)
-            .attr("y", cy - (r + arcLabelOffset + 16))
-            .attr("text-anchor", "middle")
-            .attr("font-size", `${arcLabelSize}px`)
-            .attr("font-weight", "bold")
-            .attr("fill", "#000")
-            .text("")
-            .attr("transform", `rotate(270, ${cx}, ${cy}) rotate(-270, ${cx}, ${cy - (r + arcLabelOffset + 16)})`);
 
         const overlayThree = g.append("path")
             .attr("d", d3.arc().innerRadius(r).outerRadius(r).startAngle(-Math.PI / 2).endAngle(Math.PI / 2)())
