@@ -6,7 +6,7 @@ function initWinPercentFilter(data, updateCallback) {
 
     const width = container.node().getBoundingClientRect().width || 300;
     // Reverted back to strictly using the container's exact height so it never overflows
-    const height = container.node().getBoundingClientRect().height + 45;
+    const height = container.node().getBoundingClientRect().height || 150;
     
     // Tightened the margins so the numbers fit, but the graph stays as large as possible
     const margin = {top: 0, right: 30, bottom: 20, left: 30};
