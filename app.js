@@ -36,7 +36,13 @@ function initAllFilters(skipKey = null) {
             } else if (payload.metric && Array.isArray(payload.range)) {
                 activeFilters.court[payload.metric] = payload.range;
             }
-            applyAllFilters("court");
+
+            // Live drag updates refresh the rest of the site, then final end event rebuilds court too.
+            if (payload && payload.live === true) {
+                applyAllFilters("court");
+            } else {
+                applyAllFilters();
+            }
         }, activeFilters.court);
     }
     if (skipKey !== "seed" && typeof initSeedFilter === "function") {

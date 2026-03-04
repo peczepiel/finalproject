@@ -217,10 +217,22 @@ function initCourtFilter(data, updateCallback, initialSelections = {}) {
             .style("cursor", "crosshair");
 
         let dragStartY = null;
+        let pendingTwoRange = null;
+        let rafTwoPending = false;
+        const emitTwoLive = () => {
+            if (rafTwoPending || !pendingTwoRange) return;
+            rafTwoPending = true;
+            requestAnimationFrame(() => {
+                rafTwoPending = false;
+                if (!pendingTwoRange) return;
+                updateCallback({ metric: cfg.twoMetric, range: pendingTwoRange, live: true });
+            });
+        };
         const dragFilter = d3.drag()
             .on("start", function (event) {
                 const [x] = d3.pointer(event, g.node());
                 dragStartY = x;
+                pendingTwoRange = null;
             })
             .on("drag", function (event) {
                 const [x] = d3.pointer(event, g.node());
@@ -228,8 +240,15 @@ function initCourtFilter(data, updateCallback, initialSelections = {}) {
                 const selStart = xScale.invert(left);
                 const selEnd = xScale.invert(right);
 
-                updateCallback({ metric: cfg.twoMetric, range: [selStart, selEnd] });
-                applyTwoSelection([selStart, selEnd]);
+                pendingTwoRange = [selStart, selEnd];
+                applyTwoSelection(pendingTwoRange);
+                emitTwoLive();
+            })
+            .on("end", function () {
+                if (pendingTwoRange) {
+                    updateCallback({ metric: cfg.twoMetric, range: pendingTwoRange, live: false });
+                }
+                pendingTwoRange = null;
             });
 
         densityOverlay.call(dragFilter);
@@ -337,33 +356,52 @@ function initCourtFilter(data, updateCallback, initialSelections = {}) {
                 .attr("transform", `rotate(270, ${cx}, ${cy}) rotate(-270, ${lx}, ${ly})`);
         });
 
+        const overlayAngles = d3.range(-Math.PI / 2, (Math.PI / 2) + 0.001, Math.PI / 180);
+        const overlayLine = d3.line()
+            .x(theta => cx + r * Math.cos(theta))
+            .y(theta => cy + r * Math.sin(theta));
+
         const overlayThree = g.append("path")
-            .attr("d", d3.arc().innerRadius(r).outerRadius(r).startAngle(-Math.PI / 2).endAngle(Math.PI / 2)())
-            .attr("transform", `translate(${cx}, ${cy}) rotate(270)`)
+            .attr("d", overlayLine(overlayAngles))
+            .attr("transform", `rotate(270, ${cx}, ${cy})`)
             .attr("fill", "none")
             .attr("stroke", "transparent")
-            .attr("stroke-width", 50)
+            .attr("stroke-width", 48)
             .attr("pointer-events", "stroke")
             .style("cursor", "crosshair");
 
         let dragStartAngle = null;
+        let pendingThreeRange = null;
+        let rafThreePending = false;
         const clampAngle = a => Math.max(-Math.PI / 2, Math.min(Math.PI / 2, a));
+        const emitThreeLive = () => {
+            if (rafThreePending || !pendingThreeRange) return;
+            rafThreePending = true;
+            requestAnimationFrame(() => {
+                rafThreePending = false;
+                if (!pendingThreeRange) return;
+                updateCallback({ metric: cfg.threeMetric, range: pendingThreeRange, live: true });
+            });
+        };
+        const toArcAngle = (event) => {
+            const [px, py] = d3.pointer(event, g.node());
+            const dx = px - cx;
+            const dy = py - cy;
+            // Invert the visual 270-degree rotation to map screen coordinates to arc-space.
+            const unrotX = -dy;
+            const unrotY = dx;
+            return clampAngle(Math.atan2(unrotY, unrotX));
+        };
 
         const dragFilterThree = d3.drag()
             .on("start", function (event) {
-                const [x, y] = d3.pointer(event, this);
-                const distance = Math.sqrt(x * x + y * y);
-                if (Math.abs(distance - r) > 25) {
-                    dragStartAngle = null;
-                    return;
-                }
-                dragStartAngle = clampAngle(Math.atan2(y, x));
+                dragStartAngle = toArcAngle(event);
+                pendingThreeRange = null;
             })
             .on("drag", function (event) {
                 if (dragStartAngle === null) return;
 
-                const [x, y] = d3.pointer(event, this);
-                const angle = clampAngle(Math.atan2(y, x));
+                const angle = toArcAngle(event);
                 const lower = Math.min(dragStartAngle, angle);
                 const upper = Math.max(dragStartAngle, angle);
 
@@ -372,11 +410,16 @@ function initCourtFilter(data, updateCallback, initialSelections = {}) {
                 const selStart = Math.min(valA, valB);
                 const selEnd = Math.max(valA, valB);
 
-                updateCallback({ metric: cfg.threeMetric, range: [selStart, selEnd] });
-                applyThreeSelection([selStart, selEnd]);
+                pendingThreeRange = [selStart, selEnd];
+                applyThreeSelection(pendingThreeRange);
+                emitThreeLive();
             })
             .on("end", function () {
+                if (pendingThreeRange) {
+                    updateCallback({ metric: cfg.threeMetric, range: pendingThreeRange, live: false });
+                }
                 dragStartAngle = null;
+                pendingThreeRange = null;
             });
 
         overlayThree.call(dragFilterThree);
