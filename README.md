@@ -103,7 +103,7 @@ March Madness Filtering Frenzy
 # Project Website Link
 - Our final website can be found at this link: [Project Website](https://peczepiel.github.io/finalproject/)
 - Here is the link to our project screen recorded walkthrough: Project Screencast
-- Here is a link to the Process Book in PDF form (same as above but PDF format): Process Book
+- Here is a link to the Process Book in PDF form (same as above but PDF format): [Process Book](ProcessBook.pdf)
 
 
 # Outside Libraries and References:
