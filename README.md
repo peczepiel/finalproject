@@ -103,7 +103,7 @@ March Madness Filtering Frenzy
 
 # Project Website Link
 - Our final website can be found at this link: [Project Website](https://peczepiel.github.io/finalproject/)
-- Here is the link to our project screen recorded walkthrough: Project Screencast (Too big to put in the github, please find it in the Canvas Submission)
+- Here is the link to our project screen recorded walkthrough: [Project Screencast](screencast.mp4)
 - Here is a link to the Process Book in PDF form (same as above but PDF format): [Process Book](ProcessBook.pdf)
 
 
@@ -117,4 +117,8 @@ March Madness Filtering Frenzy
 - [SelfieCity](https://selfiecity.net/selfiexploratory/?dataset=%5Blondon%5D)
 - [Sports Reference](https://www.sports-reference.com/cbb/)
 - [Buckets Visualization](https://buckets.peterbeshai.com/app/#/playerView/201935_2015)
+
+## Our Project Links:
 - [Project Website](https://peczepiel.github.io/finalproject/)
+- [Project Screencast](screencast.mp4)
+- [Process Book](ProcessBook.pdf)
