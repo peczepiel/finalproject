@@ -76,6 +76,7 @@ March Madness Filtering Frenzy
     - We added a question mark button near our Court Stats visualizations to give users who may be unfamiliar with basketball some insight into the importance of these stats.
 
 ## Implementation:
+- A key feature that we added later into development is the functionality for the other filters to change once one filter has been selected. For example, once a Win% range of 100% has been selected, years that do not include a team with a Win% of 100% will be hidden. This is similar to how SelfieCity works.
 - Bracket Selector:
     - This interactive filter shows a standard March Madness bracket with labels for each round of play. Users can select a given round and see all teams that made it to the selected round or further in the tournament.
     - ![drawing6](img/bracketselector.png)
@@ -102,7 +103,7 @@ March Madness Filtering Frenzy
 
 # Project Website Link
 - Our final website can be found at this link: [Project Website](https://peczepiel.github.io/finalproject/)
-- Here is the link to our project screen recorded walkthrough: Project Screencast
+- Here is the link to our project screen recorded walkthrough: Project Screencast (Too big to put in the github, please find it in the Canvas Submission)
 - Here is a link to the Process Book in PDF form (same as above but PDF format): [Process Book](ProcessBook.pdf)
 
 
