@@ -18,10 +18,13 @@ March Madness Filtering Frenzy
 - Here is the link to the original site: [SelfieCity](https://selfiecity.net/selfiexploratory/?dataset=%5Blondon%5D)
 
 ## Questions:
-- 
-
-What questions are you trying to answer? How did these questions evolve over the course of the project? What new questions did you consider in the course of your analysis?
-
+- The question that our group initially wanted to answer was:
+    - Is there a better alternative to learning about college basketball statistics than looking at tables and mathmatically analysis?
+- We wanted to prove that creating an interactive visualization site like SelfieCity would make it easier for everyone (experts and casuals) to understand various statistics about many different college basketball teams. This question never changed over the course of our project, but we developed a lot of new analytical questions that could be answered using our visualization site. Some of these include (there is many possible ones):
+    - Did all winning teams have a three point shooting percentage of a certain range?
+    - Are 1 seed teams more likely to win March Madness?
+    - Which year of March Madness had the teams with the highest regular season winning percentage?
+    - Did teams the won the championship have lower 2 points scored by opponents on average?
 
 ## Data:
 ### Source:
@@ -50,9 +53,8 @@ What questions are you trying to answer? How did these questions evolve over the
     - FTRD (Free Throw Percentage Made by Opponent)
 
 ## Explanatory Data Analysis:
-- 
-
-What visualizations did you use to initially look at your data? What insights did you gain? How did these insights inform your design?
+- When we initially looked at our data on [barttorvik.com](https://barttorvik.com/#), we found that there was not many data visualizations present. On that website, all of the statistics and general numbers are displayed in table format (basically and Excel Spreadsheet) with various filters that you can apply. From looking at this, we gained the insight that more interactive and "pretty" visualizations needed to be made from this data.
+- We also looked at a site with an interactive visualization on NBA player stats called [Buckets](https://buckets.peterbeshai.com/app/#/playerView/201935_2015). This gave our team some insight into how we wanted to lay out the overall page and where to place the filters we planned on making. It also helped us finalize which categories we thought we best to display.
 
 ## Design Evolution:
 - Our first task in creating this final project was creating several different drawings of what the site might possibly look like. Below is two of our initial drawings:
@@ -66,22 +68,42 @@ What visualizations did you use to initially look at your data? What insights di
 - We also created a drawing of what the new layout with the two seperated courts would look like:
 ![drawing4](img/IMG_1863.jpg)
 - Our very final implementation of the site looks like this:
-FINAL SCREENSHOT
-- Perceptual and Design Principles learned in the Course: ???????
-
+![drawing5](img/finaldraftss.png)
+- Perceptual and Design Principles: We used many concepts from our class discussions to inform our design decisions throughout the site. To name some specifically:
+    - We made sure to keep clutter to a minimum so that the user was focused on the options they had.
+    - We kept colors neutral and consistent when possible, while also choosing a few elements (like the basketballs on the bottom half) to purposefully stand out from the rest of the page.
+    - We chose the correct chart types to display the given data. For example, we used a standard shaded line graph to display the Win% but a timeline chart to display selected years.
+    - We added a question mark button near our Court Stats visualizations to give users who may be unfamiliar with basketball some insight into the importance of these stats.
 
 ## Implementation:
-- 
-
-Describe the intent and functionality of the interactive visualizations you implemented. Provide clear and well-referenced images showing the key design and interaction elements.
-
+- Bracket Selector:
+    - This interactive filter shows a standard March Madness bracket with labels for each round of play. Users can select a given round and see all teams that made it to the selected round or further in the tournament.
+    - ![drawing6](img/bracketselector.png)
+- Win% Graph Filter:
+    - This interactive visualization shows a line graph of the win percentage of all teams from 40%-100% with a shaded underside. Users can draw a box on this graph to see only teams that had a win percentage between that range.
+    - ![drawing7](img/winpercent.png)
+- Year Selector:
+    - This interactive filter shows a timeline of years between 2013-2023 (excluding 2020 due to COVID). Users can select a given year to see only teams that were part of the tournament that year.
+    - ![drawing8](img/yearselector.png)
+- Court Stats Filters:
+    - These interactive visualizations feature SVGs of basketball courts with simple line graphs overlaid onto them. This section features two seperate court images and graphs for both offensive and defensive stats. This section also features a brief legend to explain the colors of each graph. Users can select a range on each of the four graph to see teams the scored or defended in those ranges.
+    - ![drawing9](img/courtstats.png)
+- Seeding Selector:
+    - This interactive filter shows the possible seeds of teams for the March Madness Tournament (1-16). Users can select one or multiple seeds to see teams from only those seeds.
+    - ![drawing10](img/seedselector.png)
+- Team Bubble Chart:
+    - This interactive visualization features a collection of all the teams from the entire dataset (visualized as basketballs for aesthetics). This grouped bubble chart will change based on the ranges and numbers the user has selected on the filters above. The size and grouping of the basketballs will change based on the number of teams being displayed. These basketballs are hoverable to see more brief statistics on each team, and draggable if users want to rearrange the ordering of the basketballs.
+    - ![drawing11](img/basketballs.png)
 
 ## Evaluation:
-- 
-What did you learn about the data by using your visualizations? How did you answer your questions? How well does your visualization work, and how could you further improve it?
+- While making our visualizations, we learned that there was a lot of background calculation that went into many of the stats we chose to include. This was especially apparent while making our Court Stats filters as the 2P_O, 2P_D and other similar stats had been previously calculated by the creator of the dataset to make life easier for anyone trying to look for specific offense and defense stats.
+- We were also able to answer our main question of: "Is there a better alternative to learning about college basketball statistics than looking at tables and mathmatically analysis?" The answer is a resounding yes as many of the people we showed the site to (and some of the group members themselves) learned a lot more about the March Madness teams by looking at our site than by looking at the tables on [barttorvik.com](https://barttorvik.com/#).
+- Our big visualization (the basketball bubble chart) works very well when it comes to displaying smaller amounts of teams, however it can be a little messy once teams from all 10 years are present (and would probably be worse with more years). To improve this we could tweak the physics of the bubbles and their size/spacing to be able to better display more teams. However, other than this we believe our visualization does what we intended it to do.
 
 # Project Website Link
-- Our final website can be found at this link: LINK HERE
+- Our final website can be found at this link: [Project Website](https://peczepiel.github.io/finalproject/)
+- Here is the link to our project screen recorded walkthrough: Project Screencast
+- Here is a link to the Process Book in PDF form (same as above but PDF format): Process Book
 
 
 # Outside Libraries and References:
@@ -93,3 +115,5 @@ What did you learn about the data by using your visualizations? How did you answ
 - [barttorvik.com](https://barttorvik.com/#)
 - [SelfieCity](https://selfiecity.net/selfiexploratory/?dataset=%5Blondon%5D)
 - [Sports Reference](https://www.sports-reference.com/cbb/)
+- [Buckets Visualization](https://buckets.peterbeshai.com/app/#/playerView/201935_2015)
+- [Project Website](https://peczepiel.github.io/finalproject/)
